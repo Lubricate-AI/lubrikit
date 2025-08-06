@@ -18,7 +18,9 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
 ]
-dependencies = []
+dependencies = [
+    "s3fs>=2024.6.1",
+]
 
 [project.urls]
 Repository = "https://github.com/Lubricate-AI/lubrikit"
@@ -38,7 +40,7 @@ dev = [
 target-version = "py312"
 line-length = 88
 fix = true
-select = [
+lint.select = [
     "E",  # pycodestyle errors
     "W",  # pycodestyle warnings
     "F",  # pyflakes
@@ -47,7 +49,7 @@ select = [
     "C4", # flake8-comprehensions
     "UP", # pyupgrade
 ]
-ignore = []
+lint.ignore = []
 
 [tool.ruff.format]
 quote-style = "double"
