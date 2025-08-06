@@ -2,7 +2,7 @@ VENV_PATH ?= .venv
 SOURCE_PATH ?= lubrikit
 TEST_PATH ?= tests
 
-.PHONY: help install lint-python lint-spellcheck lint-yaml type-checking format test coverage
+.PHONY: help install lint-python lint-spellcheck lint-yaml type-checking format test coverage docs
 
 help: ## Show this help message
 	@echo "Available commands:"
@@ -37,3 +37,6 @@ test: ## Run all unit tests
 
 coverage: ## Run tests with coverage report
 	uv run pytest --cov=$(SOURCE_PATH) --cov-report=term-missing $(TEST_PATH)
+
+docs: ## Generate documentation using pdoc
+	uv run pdoc -o docs $(SOURCE_PATH)
