@@ -18,7 +18,9 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
 ]
-dependencies = []
+dependencies = [
+    "s3fs>=2024.6.1",
+]
 
 [project.urls]
 Repository = "https://github.com/Lubricate-AI/lubrikit"
