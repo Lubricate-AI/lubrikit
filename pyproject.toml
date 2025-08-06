@@ -38,7 +38,7 @@ dev = [
 target-version = "py312"
 line-length = 88
 fix = true
-select = [
+lint.select = [
     "E",  # pycodestyle errors
     "W",  # pycodestyle warnings
     "F",  # pyflakes
@@ -47,7 +47,7 @@ select = [
     "C4", # flake8-comprehensions
     "UP", # pyupgrade
 ]
-ignore = []
+lint.ignore = []
 
 [tool.ruff.format]
 quote-style = "double"
