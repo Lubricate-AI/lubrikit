@@ -9,10 +9,7 @@ help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 install: ## Create uv environment and install dependencies
-	pip install --upgrade pip
-	pip install uv
-	uv venv $(VENV_PATH)
-	uv pip install -r pyproject.toml
+	uv sync --extra dev
 
 lint: lint-python lint-spellcheck lint-yaml type-checking ## Run all linting checks
 
