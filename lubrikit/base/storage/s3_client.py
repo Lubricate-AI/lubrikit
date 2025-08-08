@@ -7,7 +7,7 @@ import s3fs  # type: ignore
 logger = logging.getLogger(__name__)
 
 
-class S3Client:
+class StorageClient:
     chunk_size: int = 1024
     encoding: str = "utf-8"
 
