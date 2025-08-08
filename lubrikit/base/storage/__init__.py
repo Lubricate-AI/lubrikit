@@ -1,3 +1,3 @@
-from .s3_client import S3Client
+from .s3_client import StorageClient
 
-__all__ = ["S3Client"]
+__all__ = ["StorageClient"]
