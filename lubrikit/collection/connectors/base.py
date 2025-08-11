@@ -71,11 +71,8 @@ class BaseConnector(ABC):
         ...
 
     @abstractmethod
-    def _prepare_cache(self, response: Any) -> dict[str, str]:
+    def _prepare_cache(self, *args: Any, **kwargs: Any) -> dict[str, str]:
         """Prepare cache metadata from the response.
-
-        Args:
-            response (Any): The response object.
 
         Returns:
             dict[str, str]: A dictionary containing cache metadata.
