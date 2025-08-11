@@ -19,7 +19,11 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
+    "google-api-python-client>=2.0.0",
+    "google-auth-httplib2>=0.1.0",
+    "google-auth-oauthlib>=1.0.0",
     "pydantic>=2.5.0",
+    "pydantic-settings>=2.0.0",
     "requests>=2.31.0",
     "s3fs>=2024.6.1",
 ]
@@ -68,6 +72,10 @@ show_error_codes = true
 warn_return_any = true
 warn_unused_configs = true
 warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = ["googleapiclient.*"]
+follow_untyped_imports = true
 
 [tool.pytest.ini_options]
 minversion = "6.0"
