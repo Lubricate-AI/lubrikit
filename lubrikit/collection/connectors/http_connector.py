@@ -70,7 +70,7 @@ class HTTPConnector(BaseConnector):
             params=self.config.params,
             data=self.config.data,
             json=self.config.json_data,
-            headers={**self.headers_cache, **(self.config.extra_headers or {})},
+            headers=self.headers_cache.update(self.config.extra_headers or {}),
             timeout=self.retry_config.timeout,
         )
 
