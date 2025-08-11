@@ -39,4 +39,4 @@ coverage: ## Run tests with coverage report
 	uv run pytest --cov=$(SOURCE_PATH) --cov-report=term-missing $(TEST_PATH)
 
 docs: ## Generate documentation using pdoc
-	uv run pdoc -o docs $(SOURCE_PATH)
+	uv run pdoc -d google -o docs $(SOURCE_PATH)
