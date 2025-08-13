@@ -9,7 +9,7 @@ from lubrikit.collection.connectors.configs import (
     GoogleDriveConfig,
     GoogleDriveServiceAccountInfo,
 )
-from lubrikit.collection.connectors.google_drive import GoogleDriveConnector
+from lubrikit.collection.connectors import GoogleDriveConnector
 from lubrikit.utils.retry import RetryConfig
 
 
