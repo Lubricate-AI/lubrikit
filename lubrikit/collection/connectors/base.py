@@ -6,9 +6,11 @@ from lubrikit.utils.retry import RetryConfig, retry_with_backoff
 
 class BaseConnector(ABC):
     def __init__(
-        self, headers_cache: dict[str, str], retry_config: RetryConfig | None = None
+        self,
+        headers_cache: dict[str, str] | None = None,
+        retry_config: RetryConfig | None = None,
     ) -> None:
-        self.headers_cache = headers_cache
+        self.headers_cache: dict[str, str] = headers_cache or {}
         self.retry_config = retry_config or RetryConfig()
 
         if TYPE_CHECKING:
@@ -71,11 +73,8 @@ class BaseConnector(ABC):
         ...
 
     @abstractmethod
-    def _prepare_cache(self, response: Any) -> dict[str, str]:
+    def _prepare_cache(self, *args: Any, **kwargs: Any) -> dict[str, str]:
         """Prepare cache metadata from the response.
-
-        Args:
-            response (Any): The response object.
 
         Returns:
             dict[str, str]: A dictionary containing cache metadata.
