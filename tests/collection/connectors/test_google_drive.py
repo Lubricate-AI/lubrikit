@@ -5,11 +5,11 @@ from google.auth.exceptions import RefreshError, TransportError
 from googleapiclient.errors import Error as GoogleAPIError
 from googleapiclient.errors import HttpError
 
+from lubrikit.collection.connectors import GoogleDriveConnector
 from lubrikit.collection.connectors.configs import (
     GoogleDriveConfig,
     GoogleDriveServiceAccountInfo,
 )
-from lubrikit.collection.connectors import GoogleDriveConnector
 from lubrikit.utils.retry import RetryConfig
 
 
