@@ -345,7 +345,7 @@ class GoogleDriveConnector(BaseConnector):
         """When the file was updated in Google Drive.
 
         Returns:
-            datetime: Datetime for when the data source file was updated.
+            str: Datetime string for when the data source file was updated.
         """
         if not self.client:
             raise ValueError("Google Drive client is not initialized.")
