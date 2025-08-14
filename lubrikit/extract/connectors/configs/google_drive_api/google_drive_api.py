@@ -4,14 +4,15 @@ from pydantic import BaseModel, Field
 class GoogleDriveAPIConfig(BaseModel):
     """Configuration for Google Drive API connector.
 
-    This class defines the configuration parameters required to connect to and
-    interact with the Google Drive API. It uses Pydantic for data validation
-    and type checking.
+    This class defines the configuration parameters required to connect
+    to and interact with the Google Drive API. It uses Pydantic for data
+    validation and type checking.
 
     Attributes:
-        file_id (str): The unique identifier of the Google Drive file to access.
-            This is a required field with a minimum length of 1 character.
-            The file ID can be found in the Google Drive URL when viewing a file.
+        file_id (str): The unique identifier of the Google Drive file to
+            access. This is a required field with a minimum length of 1
+            character. The file ID can be found in the Google Drive URL
+            when viewing a file.
             Example: "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
 
     Example:
