@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from lubrikit.collection.connectors.configs.google_drive_api import GoogleDriveAPIConfig
+from lubrikit.extract.connectors.configs.google_drive_api import GoogleDriveAPIConfig
 
 
 def test_valid_file_id() -> None:

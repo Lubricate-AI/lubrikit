@@ -3,8 +3,8 @@ from unittest.mock import Mock, patch
 import pytest
 import requests
 
-from lubrikit.collection import HTTPConnector
-from lubrikit.collection.connectors.configs import HTTPConfig
+from lubrikit.extract import HTTPConnector
+from lubrikit.extract.connectors.configs import HTTPConfig
 from lubrikit.utils.retry import RetryConfig
 
 
@@ -131,7 +131,7 @@ def test_prepare_cache_no_headers(connector: HTTPConnector) -> None:
     assert cache == {}
 
 
-@patch("lubrikit.collection.connectors.http_connector.requests.request")
+@patch("lubrikit.extract.connectors.http_connector.requests.request")
 def test_check_success(mock_request: Mock, connector: HTTPConnector) -> None:
     """Test _check method with successful response."""
     mock_response = Mock(spec=requests.Response)
@@ -153,8 +153,8 @@ def test_check_success(mock_request: Mock, connector: HTTPConnector) -> None:
     )
 
 
-@patch("lubrikit.collection.connectors.http_connector.requests.request")
-@patch("lubrikit.collection.connectors.http_connector.logger")
+@patch("lubrikit.extract.connectors.http_connector.requests.request")
+@patch("lubrikit.extract.connectors.http_connector.logger")
 def test_check_failure(
     mock_logger: Mock, mock_request: Mock, connector: HTTPConnector
 ) -> None:
@@ -171,7 +171,7 @@ def test_check_failure(
     mock_logger.error.assert_called_once_with("Check failed: 404 Not Found")
 
 
-@patch("lubrikit.collection.connectors.http_connector.requests.request")
+@patch("lubrikit.extract.connectors.http_connector.requests.request")
 def test_download_success_new_content(
     mock_request: Mock, connector: HTTPConnector
 ) -> None:
@@ -198,8 +198,8 @@ def test_download_success_new_content(
     assert response == mock_response
 
 
-@patch("lubrikit.collection.connectors.http_connector.requests.request")
-@patch("lubrikit.collection.connectors.http_connector.logger")
+@patch("lubrikit.extract.connectors.http_connector.requests.request")
+@patch("lubrikit.extract.connectors.http_connector.logger")
 def test_download_not_modified_304(
     mock_logger: Mock, mock_request: Mock, connector: HTTPConnector
 ) -> None:
@@ -220,8 +220,8 @@ def test_download_not_modified_304(
     )
 
 
-@patch("lubrikit.collection.connectors.http_connector.requests.request")
-@patch("lubrikit.collection.connectors.http_connector.logger")
+@patch("lubrikit.extract.connectors.http_connector.requests.request")
+@patch("lubrikit.extract.connectors.http_connector.logger")
 def test_download_unchanged_content(mock_logger: Mock, mock_request: Mock) -> None:
     """Test _download method when content hasn't changed based on headers."""
     headers_cache = {
@@ -257,8 +257,8 @@ def test_download_unchanged_content(mock_logger: Mock, mock_request: Mock) -> No
     )
 
 
-@patch("lubrikit.collection.connectors.http_connector.requests.request")
-@patch("lubrikit.collection.connectors.http_connector.logger")
+@patch("lubrikit.extract.connectors.http_connector.requests.request")
+@patch("lubrikit.extract.connectors.http_connector.logger")
 def test_download_failure(
     mock_logger: Mock, mock_request: Mock, connector: HTTPConnector
 ) -> None:
@@ -279,7 +279,7 @@ def test_download_failure(
     )
 
 
-@patch("lubrikit.collection.connectors.http_connector.requests.request")
+@patch("lubrikit.extract.connectors.http_connector.requests.request")
 def test_post_request_with_form_data(mock_request: Mock) -> None:
     """Test POST request with form data."""
     headers_cache = {"last_modified": "old_date"}  # Different from response
@@ -313,7 +313,7 @@ def test_post_request_with_form_data(mock_request: Mock) -> None:
     assert response == mock_response
 
 
-@patch("lubrikit.collection.connectors.http_connector.requests.request")
+@patch("lubrikit.extract.connectors.http_connector.requests.request")
 def test_post_request_with_json_data(mock_request: Mock) -> None:
     """Test POST request with JSON data."""
     headers_cache = {"content_length": "50"}  # Different from response
@@ -359,7 +359,7 @@ def test_retry_exceptions_configuration(connector: HTTPConnector) -> None:
     assert connector.retriable_exceptions == expected_exceptions
 
 
-@patch("lubrikit.collection.connectors.http_connector.requests.request")
+@patch("lubrikit.extract.connectors.http_connector.requests.request")
 def test_custom_retry_config_used(
     mock_request: Mock, connector_with_retry: HTTPConnector
 ) -> None:
@@ -376,7 +376,7 @@ def test_custom_retry_config_used(
     assert call_kwargs["timeout"] == 5.0
 
 
-@patch("lubrikit.collection.connectors.http_connector.requests.request")
+@patch("lubrikit.extract.connectors.http_connector.requests.request")
 def test_headers_update_with_extra_headers(mock_request: Mock) -> None:
     """Test that extra headers are properly merged with headers cache."""
     headers_cache = {"Authorization": "Bearer token123"}

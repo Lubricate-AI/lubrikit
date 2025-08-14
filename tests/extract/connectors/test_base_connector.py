@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from lubrikit.collection.connectors.base import BaseConnector
+from lubrikit.extract.connectors.base import BaseConnector
 from lubrikit.utils.retry import RetryConfig
 
 
@@ -113,7 +113,7 @@ def test_initialization_none_headers_cache() -> None:
     assert connector.headers_cache == {}
 
 
-@patch("lubrikit.collection.connectors.base.retry_with_backoff")
+@patch("lubrikit.extract.connectors.base.retry_with_backoff")
 def test_check_method_calls_retry_decorator(
     mock_retry_with_backoff: Mock, connector: ConcreteConnector
 ) -> None:
@@ -144,7 +144,7 @@ def test_check_method_calls_retry_decorator(
     assert result == {"test": "result"}
 
 
-@patch("lubrikit.collection.connectors.base.retry_with_backoff")
+@patch("lubrikit.extract.connectors.base.retry_with_backoff")
 def test_download_method_calls_retry_decorator(
     mock_retry_with_backoff: Mock, connector: ConcreteConnector
 ) -> None:
@@ -191,7 +191,7 @@ def test_download_method_direct_call(connector: ConcreteConnector) -> None:
     assert result == ({"status": "downloaded", "size": 1024}, "mock_response_data")
 
 
-@patch("lubrikit.collection.connectors.base.retry_with_backoff")
+@patch("lubrikit.extract.connectors.base.retry_with_backoff")
 def test_check_uses_custom_retry_config(
     mock_retry_with_backoff: Mock, connector_with_retry: ConcreteConnector
 ) -> None:
@@ -213,7 +213,7 @@ def test_check_uses_custom_retry_config(
     )
 
 
-@patch("lubrikit.collection.connectors.base.retry_with_backoff")
+@patch("lubrikit.extract.connectors.base.retry_with_backoff")
 def test_download_uses_custom_retry_config(
     mock_retry_with_backoff: Mock, connector_with_retry: ConcreteConnector
 ) -> None:
@@ -272,7 +272,7 @@ def test_download_with_retriable_exceptions() -> None:
         ("download", "backoff_factor"),
     ],
 )
-@patch("lubrikit.collection.connectors.base.retry_with_backoff")
+@patch("lubrikit.extract.connectors.base.retry_with_backoff")
 def test_methods_use_same_retry_configuration(
     mock_retry_with_backoff: Mock,
     connector: ConcreteConnector,

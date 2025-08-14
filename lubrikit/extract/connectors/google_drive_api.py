@@ -10,8 +10,8 @@ from googleapiclient.errors import Error as GoogleAPIError
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseDownload
 
-from lubrikit.collection.connectors.base import BaseConnector
-from lubrikit.collection.connectors.configs import (
+from lubrikit.extract.connectors.base import BaseConnector
+from lubrikit.extract.connectors.configs import (
     GoogleDriveAPIConfig,
     GoogleDriveAPIServiceAccountInfo,
 )

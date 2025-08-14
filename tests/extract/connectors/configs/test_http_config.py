@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from lubrikit.collection.connectors.configs.http_config import HTTPConfig
+from lubrikit.extract.connectors.configs.http_config import HTTPConfig
 
 
 @pytest.mark.parametrize(

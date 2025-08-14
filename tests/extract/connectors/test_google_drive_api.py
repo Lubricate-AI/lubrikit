@@ -5,8 +5,8 @@ from google.auth.exceptions import RefreshError, TransportError
 from googleapiclient.errors import Error as GoogleAPIError
 from googleapiclient.errors import HttpError
 
-from lubrikit.collection import GoogleDriveAPIConnector
-from lubrikit.collection.connectors.configs import (
+from lubrikit.extract import GoogleDriveAPIConnector
+from lubrikit.extract.connectors.configs import (
     GoogleDriveAPIConfig,
     GoogleDriveAPIServiceAccountInfo,
 )
@@ -126,9 +126,7 @@ def mock_google_api_client() -> Mock:
     return mock_client
 
 
-@patch(
-    "lubrikit.collection.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo"
-)
+@patch("lubrikit.extract.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo")
 def test_initialization_default(
     mock_service_account_info: Mock,
     google_drive_config: GoogleDriveAPIConfig,
@@ -167,9 +165,7 @@ def test_initialization_with_service_account(
     assert connector.headers_cache == headers_cache
 
 
-@patch(
-    "lubrikit.collection.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo"
-)
+@patch("lubrikit.extract.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo")
 def test_initialization_with_retry_config(
     mock_service_account_info: Mock,
     google_drive_config: GoogleDriveAPIConfig,
@@ -190,9 +186,7 @@ def test_initialization_with_retry_config(
     assert connector.retry_config == retry_config
 
 
-@patch(
-    "lubrikit.collection.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo"
-)
+@patch("lubrikit.extract.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo")
 def test_initialization_empty_headers_cache(
     mock_service_account_info: Mock, google_drive_config: GoogleDriveAPIConfig
 ) -> None:
@@ -220,8 +214,8 @@ def test_retriable_exceptions_configuration(connector: GoogleDriveAPIConnector) 
     assert connector.retriable_exceptions == expected_exceptions
 
 
-@patch("lubrikit.collection.connectors.google_drive_api.build")
-@patch("lubrikit.collection.connectors.google_drive_api.service_account")
+@patch("lubrikit.extract.connectors.google_drive_api.build")
+@patch("lubrikit.extract.connectors.google_drive_api.service_account")
 def test_connect_method(
     mock_service_account: Mock,
     mock_build: Mock,
@@ -315,7 +309,7 @@ def test_last_modified_at_no_client(connector: GoogleDriveAPIConnector) -> None:
         _ = connector.last_modified_at
 
 
-@patch("lubrikit.collection.connectors.google_drive_api.logger")
+@patch("lubrikit.extract.connectors.google_drive_api.logger")
 def test_check_success(
     mock_logger: Mock,
     connector: GoogleDriveAPIConnector,
@@ -337,7 +331,7 @@ def test_check_success(
     mock_prepare_cache.assert_called_once()
 
 
-@patch("lubrikit.collection.connectors.google_drive_api.logger")
+@patch("lubrikit.extract.connectors.google_drive_api.logger")
 def test_check_failure(
     mock_logger: Mock,
     connector: GoogleDriveAPIConnector,
@@ -392,8 +386,8 @@ def test_prepare_cache_with_none_values(
     assert cache == expected_cache
 
 
-@patch("lubrikit.collection.connectors.google_drive_api.MediaIoBaseDownload")
-@patch("lubrikit.collection.connectors.google_drive_api.io.BytesIO")
+@patch("lubrikit.extract.connectors.google_drive_api.MediaIoBaseDownload")
+@patch("lubrikit.extract.connectors.google_drive_api.io.BytesIO")
 def test_download_success_new_content(
     mock_bytes_io: Mock,
     mock_media_download: Mock,
@@ -449,7 +443,7 @@ def test_download_no_new_version(
             return_value={"last_modified": "same-date", "content_length": "1024"},
         ):
             with patch(
-                "lubrikit.collection.connectors.google_drive_api.logger"
+                "lubrikit.extract.connectors.google_drive_api.logger"
             ) as mock_logger:
                 headers, (stream, downloader) = connector._download()
 
@@ -488,10 +482,8 @@ def test_class_attributes() -> None:
     assert GoogleDriveAPIConnector.scopes == ["https://www.googleapis.com/auth/drive"]
 
 
-@patch("lubrikit.collection.connectors.google_drive_api.logger")
-@patch(
-    "lubrikit.collection.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo"
-)
+@patch("lubrikit.extract.connectors.google_drive_api.logger")
+@patch("lubrikit.extract.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo")
 def test_service_account_info_loading_from_env(
     mock_service_account_class: Mock,
     mock_logger: Mock,
@@ -537,9 +529,7 @@ def test_file_id_from_config(connector: GoogleDriveAPIConnector) -> None:
         ({"key": "value"}, {"key": "value"}),
     ],
 )
-@patch(
-    "lubrikit.collection.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo"
-)
+@patch("lubrikit.extract.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo")
 def test_headers_cache_initialization(
     mock_service_account_info: Mock,
     google_drive_config: GoogleDriveAPIConfig,
@@ -573,11 +563,9 @@ def test_download_cache_comparison_logic(
             return_value={"last_modified": "new-date", "content_length": "1024"},
         ):
             with patch(
-                "lubrikit.collection.connectors.google_drive_api.MediaIoBaseDownload"
+                "lubrikit.extract.connectors.google_drive_api.MediaIoBaseDownload"
             ):
-                with patch(
-                    "lubrikit.collection.connectors.google_drive_api.io.BytesIO"
-                ):
+                with patch("lubrikit.extract.connectors.google_drive_api.io.BytesIO"):
                     _, (stream, downloader) = connector._download()
 
     # Should trigger download
@@ -597,11 +585,9 @@ def test_download_cache_comparison_logic(
             return_value={"last_modified": "same-date", "content_length": "1024"},
         ):
             with patch(
-                "lubrikit.collection.connectors.google_drive_api.MediaIoBaseDownload"
+                "lubrikit.extract.connectors.google_drive_api.MediaIoBaseDownload"
             ):
-                with patch(
-                    "lubrikit.collection.connectors.google_drive_api.io.BytesIO"
-                ):
+                with patch("lubrikit.extract.connectors.google_drive_api.io.BytesIO"):
                     _, (stream, downloader) = connector._download()
 
     # Should trigger download
