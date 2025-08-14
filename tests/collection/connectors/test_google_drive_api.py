@@ -126,7 +126,9 @@ def mock_google_api_client() -> Mock:
     return mock_client
 
 
-@patch("lubrikit.collection.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo")
+@patch(
+    "lubrikit.collection.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo"
+)
 def test_initialization_default(
     mock_service_account_info: Mock,
     google_drive_config: GoogleDriveAPIConfig,
@@ -165,7 +167,9 @@ def test_initialization_with_service_account(
     assert connector.headers_cache == headers_cache
 
 
-@patch("lubrikit.collection.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo")
+@patch(
+    "lubrikit.collection.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo"
+)
 def test_initialization_with_retry_config(
     mock_service_account_info: Mock,
     google_drive_config: GoogleDriveAPIConfig,
@@ -186,7 +190,9 @@ def test_initialization_with_retry_config(
     assert connector.retry_config == retry_config
 
 
-@patch("lubrikit.collection.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo")
+@patch(
+    "lubrikit.collection.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo"
+)
 def test_initialization_empty_headers_cache(
     mock_service_account_info: Mock, google_drive_config: GoogleDriveAPIConfig
 ) -> None:
@@ -483,7 +489,9 @@ def test_class_attributes() -> None:
 
 
 @patch("lubrikit.collection.connectors.google_drive_api.logger")
-@patch("lubrikit.collection.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo")
+@patch(
+    "lubrikit.collection.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo"
+)
 def test_service_account_info_loading_from_env(
     mock_service_account_class: Mock,
     mock_logger: Mock,
@@ -529,7 +537,9 @@ def test_file_id_from_config(connector: GoogleDriveAPIConnector) -> None:
         ({"key": "value"}, {"key": "value"}),
     ],
 )
-@patch("lubrikit.collection.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo")
+@patch(
+    "lubrikit.collection.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo"
+)
 def test_headers_cache_initialization(
     mock_service_account_info: Mock,
     google_drive_config: GoogleDriveAPIConfig,
@@ -565,7 +575,9 @@ def test_download_cache_comparison_logic(
             with patch(
                 "lubrikit.collection.connectors.google_drive_api.MediaIoBaseDownload"
             ):
-                with patch("lubrikit.collection.connectors.google_drive_api.io.BytesIO"):
+                with patch(
+                    "lubrikit.collection.connectors.google_drive_api.io.BytesIO"
+                ):
                     _, (stream, downloader) = connector._download()
 
     # Should trigger download
@@ -587,7 +599,9 @@ def test_download_cache_comparison_logic(
             with patch(
                 "lubrikit.collection.connectors.google_drive_api.MediaIoBaseDownload"
             ):
-                with patch("lubrikit.collection.connectors.google_drive_api.io.BytesIO"):
+                with patch(
+                    "lubrikit.collection.connectors.google_drive_api.io.BytesIO"
+                ):
                     _, (stream, downloader) = connector._download()
 
     # Should trigger download
