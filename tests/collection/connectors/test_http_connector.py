@@ -3,8 +3,8 @@ from unittest.mock import Mock, patch
 import pytest
 import requests
 
+from lubrikit.collection import HTTPConnector
 from lubrikit.collection.connectors.configs import HTTPConfig
-from lubrikit.collection.connectors.http_connector import HTTPConnector
 from lubrikit.utils.retry import RetryConfig
 
 

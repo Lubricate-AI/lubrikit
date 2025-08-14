@@ -1,4 +1,4 @@
-from .google_drive import GoogleDriveConfig, GoogleDriveServiceAccountInfo
+from .google_drive_api import GoogleDriveAPIConfig, GoogleDriveAPIServiceAccountInfo
 from .http_config import HTTPConfig
 
-__all__ = ["GoogleDriveConfig", "GoogleDriveServiceAccountInfo", "HTTPConfig"]
+__all__ = ["GoogleDriveAPIConfig", "GoogleDriveAPIServiceAccountInfo", "HTTPConfig"]

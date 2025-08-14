@@ -58,9 +58,9 @@ lint.select = [
 lint.ignore = []
 
 [tool.ruff.lint.per-file-ignores]
-"lubrikit/collection/connectors/google_drive.py" = ["E501"]
-"tests/collection/connectors/configs/google_drive/test_service_account.py" = ["E501"]
-"tests/collection/connectors/test_google_drive.py" = ["E501", "F841"]
+"lubrikit/collection/connectors/google_drive_api.py" = ["E501"]
+"tests/collection/connectors/configs/google_drive_api/test_service_account.py" = ["E501"]
+"tests/collection/connectors/test_google_drive_api.py" = ["E501", "F841"]
 
 [tool.ruff.format]
 quote-style = "double"

@@ -5,10 +5,10 @@ from google.auth.exceptions import RefreshError, TransportError
 from googleapiclient.errors import Error as GoogleAPIError
 from googleapiclient.errors import HttpError
 
-from lubrikit.collection.connectors import GoogleDriveConnector
+from lubrikit.collection import GoogleDriveAPIConnector
 from lubrikit.collection.connectors.configs import (
-    GoogleDriveConfig,
-    GoogleDriveServiceAccountInfo,
+    GoogleDriveAPIConfig,
+    GoogleDriveAPIServiceAccountInfo,
 )
 from lubrikit.utils.retry import RetryConfig
 
@@ -24,15 +24,15 @@ def headers_cache() -> dict[str, str]:
 
 
 @pytest.fixture
-def google_drive_config() -> GoogleDriveConfig:
+def google_drive_config() -> GoogleDriveAPIConfig:
     """Sample GoogleDrive configuration."""
-    return GoogleDriveConfig(file_id="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms")
+    return GoogleDriveAPIConfig(file_id="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms")
 
 
 @pytest.fixture
-def service_account_info() -> GoogleDriveServiceAccountInfo:
+def service_account_info() -> GoogleDriveAPIServiceAccountInfo:
     """Sample service account info."""
-    return GoogleDriveServiceAccountInfo(
+    return GoogleDriveAPIServiceAccountInfo(
         type="service_account",
         project_id="test-project",
         private_key_id="test-key-id",
@@ -61,12 +61,12 @@ def retry_config() -> RetryConfig:
 
 @pytest.fixture
 def connector(
-    google_drive_config: GoogleDriveConfig,
+    google_drive_config: GoogleDriveAPIConfig,
     headers_cache: dict[str, str],
-    service_account_info: GoogleDriveServiceAccountInfo,
-) -> GoogleDriveConnector:
-    """GoogleDriveConnector instance with default configuration."""
-    return GoogleDriveConnector(
+    service_account_info: GoogleDriveAPIServiceAccountInfo,
+) -> GoogleDriveAPIConnector:
+    """GoogleDriveAPIConnector instance with default configuration."""
+    return GoogleDriveAPIConnector(
         config=google_drive_config,
         headers_cache=headers_cache,
         service_account_info=service_account_info,
@@ -75,12 +75,12 @@ def connector(
 
 @pytest.fixture
 def connector_with_service_account(
-    google_drive_config: GoogleDriveConfig,
-    service_account_info: GoogleDriveServiceAccountInfo,
+    google_drive_config: GoogleDriveAPIConfig,
+    service_account_info: GoogleDriveAPIServiceAccountInfo,
     headers_cache: dict[str, str],
-) -> GoogleDriveConnector:
-    """GoogleDriveConnector instance with explicit service account info."""
-    return GoogleDriveConnector(
+) -> GoogleDriveAPIConnector:
+    """GoogleDriveAPIConnector instance with explicit service account info."""
+    return GoogleDriveAPIConnector(
         config=google_drive_config,
         service_account_info=service_account_info,
         headers_cache=headers_cache,
@@ -89,13 +89,13 @@ def connector_with_service_account(
 
 @pytest.fixture
 def connector_with_retry(
-    google_drive_config: GoogleDriveConfig,
+    google_drive_config: GoogleDriveAPIConfig,
     headers_cache: dict[str, str],
     retry_config: RetryConfig,
-    service_account_info: GoogleDriveServiceAccountInfo,
-) -> GoogleDriveConnector:
-    """GoogleDriveConnector instance with retry configuration."""
-    return GoogleDriveConnector(
+    service_account_info: GoogleDriveAPIServiceAccountInfo,
+) -> GoogleDriveAPIConnector:
+    """GoogleDriveAPIConnector instance with retry configuration."""
+    return GoogleDriveAPIConnector(
         config=google_drive_config,
         headers_cache=headers_cache,
         retry_config=retry_config,
@@ -126,17 +126,17 @@ def mock_google_api_client() -> Mock:
     return mock_client
 
 
-@patch("lubrikit.collection.connectors.google_drive.GoogleDriveServiceAccountInfo")
+@patch("lubrikit.collection.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo")
 def test_initialization_default(
     mock_service_account_info: Mock,
-    google_drive_config: GoogleDriveConfig,
+    google_drive_config: GoogleDriveAPIConfig,
     headers_cache: dict[str, str],
 ) -> None:
-    """Test GoogleDriveConnector initialization with default settings."""
+    """Test GoogleDriveAPIConnector initialization with default settings."""
     mock_service_account_instance = Mock()
     mock_service_account_info.return_value = mock_service_account_instance
 
-    connector = GoogleDriveConnector(
+    connector = GoogleDriveAPIConnector(
         config=google_drive_config, headers_cache=headers_cache
     )
 
@@ -149,12 +149,12 @@ def test_initialization_default(
 
 
 def test_initialization_with_service_account(
-    google_drive_config: GoogleDriveConfig,
-    service_account_info: GoogleDriveServiceAccountInfo,
+    google_drive_config: GoogleDriveAPIConfig,
+    service_account_info: GoogleDriveAPIServiceAccountInfo,
     headers_cache: dict[str, str],
 ) -> None:
-    """Test GoogleDriveConnector initialization with explicit service account."""
-    connector = GoogleDriveConnector(
+    """Test GoogleDriveAPIConnector initialization with explicit service account."""
+    connector = GoogleDriveAPIConnector(
         config=google_drive_config,
         service_account_info=service_account_info,
         headers_cache=headers_cache,
@@ -165,18 +165,18 @@ def test_initialization_with_service_account(
     assert connector.headers_cache == headers_cache
 
 
-@patch("lubrikit.collection.connectors.google_drive.GoogleDriveServiceAccountInfo")
+@patch("lubrikit.collection.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo")
 def test_initialization_with_retry_config(
     mock_service_account_info: Mock,
-    google_drive_config: GoogleDriveConfig,
+    google_drive_config: GoogleDriveAPIConfig,
     headers_cache: dict[str, str],
     retry_config: RetryConfig,
 ) -> None:
-    """Test GoogleDriveConnector initialization with custom retry config."""
+    """Test GoogleDriveAPIConnector initialization with custom retry config."""
     mock_service_account_instance = Mock()
     mock_service_account_info.return_value = mock_service_account_instance
 
-    connector = GoogleDriveConnector(
+    connector = GoogleDriveAPIConnector(
         config=google_drive_config,
         headers_cache=headers_cache,
         retry_config=retry_config,
@@ -186,21 +186,21 @@ def test_initialization_with_retry_config(
     assert connector.retry_config == retry_config
 
 
-@patch("lubrikit.collection.connectors.google_drive.GoogleDriveServiceAccountInfo")
+@patch("lubrikit.collection.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo")
 def test_initialization_empty_headers_cache(
-    mock_service_account_info: Mock, google_drive_config: GoogleDriveConfig
+    mock_service_account_info: Mock, google_drive_config: GoogleDriveAPIConfig
 ) -> None:
-    """Test GoogleDriveConnector initialization with empty headers cache."""
+    """Test GoogleDriveAPIConnector initialization with empty headers cache."""
     mock_service_account_instance = Mock()
     mock_service_account_info.return_value = mock_service_account_instance
 
-    connector = GoogleDriveConnector(config=google_drive_config)
+    connector = GoogleDriveAPIConnector(config=google_drive_config)
 
     assert connector.headers_cache == {}
     assert connector.config == google_drive_config
 
 
-def test_retriable_exceptions_configuration(connector: GoogleDriveConnector) -> None:
+def test_retriable_exceptions_configuration(connector: GoogleDriveAPIConnector) -> None:
     """Test that retriable exceptions are properly configured."""
     expected_exceptions = (
         HttpError,
@@ -214,12 +214,12 @@ def test_retriable_exceptions_configuration(connector: GoogleDriveConnector) -> 
     assert connector.retriable_exceptions == expected_exceptions
 
 
-@patch("lubrikit.collection.connectors.google_drive.build")
-@patch("lubrikit.collection.connectors.google_drive.service_account")
+@patch("lubrikit.collection.connectors.google_drive_api.build")
+@patch("lubrikit.collection.connectors.google_drive_api.service_account")
 def test_connect_method(
     mock_service_account: Mock,
     mock_build: Mock,
-    connector: GoogleDriveConnector,
+    connector: GoogleDriveAPIConnector,
     mock_google_api_client: Mock,
 ) -> None:
     """Test the connect method creates Google Drive client."""
@@ -239,10 +239,10 @@ def test_connect_method(
     mock_service_account.Credentials.from_service_account_info.assert_called_once_with(
         info=connector.service_account_info.model_dump()
     )
-    mock_credentials.with_scopes.assert_called_once_with(GoogleDriveConnector.scopes)
+    mock_credentials.with_scopes.assert_called_once_with(GoogleDriveAPIConnector.scopes)
     mock_build.assert_called_once_with(
-        GoogleDriveConnector.api_name,
-        GoogleDriveConnector.api_version,
+        GoogleDriveAPIConnector.api_name,
+        GoogleDriveAPIConnector.api_version,
         credentials=mock_scoped_credentials,
     )
 
@@ -250,7 +250,7 @@ def test_connect_method(
 
 
 def test_content_length_property(
-    connector: GoogleDriveConnector, mock_google_api_client: Mock
+    connector: GoogleDriveAPIConnector, mock_google_api_client: Mock
 ) -> None:
     """Test content_length cached property."""
     connector.client = mock_google_api_client
@@ -263,14 +263,14 @@ def test_content_length_property(
     )
 
 
-def test_content_length_no_client(connector: GoogleDriveConnector) -> None:
+def test_content_length_no_client(connector: GoogleDriveAPIConnector) -> None:
     """Test content_length property raises error when client not initialized."""
     with pytest.raises(ValueError, match="Google Drive client is not initialized"):
         _ = connector.content_length
 
 
 def test_file_name_property(
-    connector: GoogleDriveConnector, mock_google_api_client: Mock
+    connector: GoogleDriveAPIConnector, mock_google_api_client: Mock
 ) -> None:
     """Test file_name cached property."""
     connector.client = mock_google_api_client
@@ -283,14 +283,14 @@ def test_file_name_property(
     )
 
 
-def test_file_name_no_client(connector: GoogleDriveConnector) -> None:
+def test_file_name_no_client(connector: GoogleDriveAPIConnector) -> None:
     """Test file_name property raises error when client not initialized."""
     with pytest.raises(ValueError, match="Google Drive client is not initialized"):
         _ = connector.file_name
 
 
 def test_last_modified_at_property(
-    connector: GoogleDriveConnector, mock_google_api_client: Mock
+    connector: GoogleDriveAPIConnector, mock_google_api_client: Mock
 ) -> None:
     """Test last_modified_at cached property."""
     connector.client = mock_google_api_client
@@ -303,16 +303,16 @@ def test_last_modified_at_property(
     )
 
 
-def test_last_modified_at_no_client(connector: GoogleDriveConnector) -> None:
+def test_last_modified_at_no_client(connector: GoogleDriveAPIConnector) -> None:
     """Test last_modified_at property raises error when client not initialized."""
     with pytest.raises(ValueError, match="Google Drive client is not initialized"):
         _ = connector.last_modified_at
 
 
-@patch("lubrikit.collection.connectors.google_drive.logger")
+@patch("lubrikit.collection.connectors.google_drive_api.logger")
 def test_check_success(
     mock_logger: Mock,
-    connector: GoogleDriveConnector,
+    connector: GoogleDriveAPIConnector,
     mock_google_api_client: Mock,
 ) -> None:
     """Test _check method with successful connection."""
@@ -331,10 +331,10 @@ def test_check_success(
     mock_prepare_cache.assert_called_once()
 
 
-@patch("lubrikit.collection.connectors.google_drive.logger")
+@patch("lubrikit.collection.connectors.google_drive_api.logger")
 def test_check_failure(
     mock_logger: Mock,
-    connector: GoogleDriveConnector,
+    connector: GoogleDriveAPIConnector,
 ) -> None:
     """Test _check method with connection failure."""
     with patch.object(connector, "connect", side_effect=Exception("Connection failed")):
@@ -347,7 +347,7 @@ def test_check_failure(
 
 
 def test_prepare_cache(
-    connector: GoogleDriveConnector, mock_google_api_client: Mock
+    connector: GoogleDriveAPIConnector, mock_google_api_client: Mock
 ) -> None:
     """Test _prepare_cache method."""
     connector.client = mock_google_api_client
@@ -367,7 +367,7 @@ def test_prepare_cache(
 
 
 def test_prepare_cache_with_none_values(
-    connector: GoogleDriveConnector, mock_google_api_client: Mock
+    connector: GoogleDriveAPIConnector, mock_google_api_client: Mock
 ) -> None:
     """Test _prepare_cache method with None values."""
     connector.client = mock_google_api_client
@@ -386,12 +386,12 @@ def test_prepare_cache_with_none_values(
     assert cache == expected_cache
 
 
-@patch("lubrikit.collection.connectors.google_drive.MediaIoBaseDownload")
-@patch("lubrikit.collection.connectors.google_drive.io.BytesIO")
+@patch("lubrikit.collection.connectors.google_drive_api.MediaIoBaseDownload")
+@patch("lubrikit.collection.connectors.google_drive_api.io.BytesIO")
 def test_download_success_new_content(
     mock_bytes_io: Mock,
     mock_media_download: Mock,
-    connector: GoogleDriveConnector,
+    connector: GoogleDriveAPIConnector,
     mock_google_api_client: Mock,
 ) -> None:
     """Test _download method with successful download of new content."""
@@ -427,7 +427,7 @@ def test_download_success_new_content(
 
 
 def test_download_no_new_version(
-    connector: GoogleDriveConnector, mock_google_api_client: Mock
+    connector: GoogleDriveAPIConnector, mock_google_api_client: Mock
 ) -> None:
     """Test _download method when no new version is available."""
     # Setup cache with same values as will be returned
@@ -443,7 +443,7 @@ def test_download_no_new_version(
             return_value={"last_modified": "same-date", "content_length": "1024"},
         ):
             with patch(
-                "lubrikit.collection.connectors.google_drive.logger"
+                "lubrikit.collection.connectors.google_drive_api.logger"
             ) as mock_logger:
                 headers, (stream, downloader) = connector._download()
 
@@ -469,31 +469,31 @@ def test_download_no_new_version(
     ],
 )
 def test_retriable_exceptions_are_configured(
-    connector: GoogleDriveConnector, exception_type: type
+    connector: GoogleDriveAPIConnector, exception_type: type
 ) -> None:
     """Test that all expected retriable exceptions are configured."""
     assert exception_type in connector.retriable_exceptions
 
 
 def test_class_attributes() -> None:
-    """Test GoogleDriveConnector class attributes."""
-    assert GoogleDriveConnector.api_name == "drive"
-    assert GoogleDriveConnector.api_version == "v3"
-    assert GoogleDriveConnector.scopes == ["https://www.googleapis.com/auth/drive"]
+    """Test GoogleDriveAPIConnector class attributes."""
+    assert GoogleDriveAPIConnector.api_name == "drive"
+    assert GoogleDriveAPIConnector.api_version == "v3"
+    assert GoogleDriveAPIConnector.scopes == ["https://www.googleapis.com/auth/drive"]
 
 
-@patch("lubrikit.collection.connectors.google_drive.logger")
-@patch("lubrikit.collection.connectors.google_drive.GoogleDriveServiceAccountInfo")
+@patch("lubrikit.collection.connectors.google_drive_api.logger")
+@patch("lubrikit.collection.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo")
 def test_service_account_info_loading_from_env(
     mock_service_account_class: Mock,
     mock_logger: Mock,
-    google_drive_config: GoogleDriveConfig,
+    google_drive_config: GoogleDriveAPIConfig,
 ) -> None:
     """Test that service account info is loaded from environment when not provided."""
     mock_service_account_instance = Mock()
     mock_service_account_class.return_value = mock_service_account_instance
 
-    connector = GoogleDriveConnector(config=google_drive_config)
+    connector = GoogleDriveAPIConnector(config=google_drive_config)
 
     assert connector.service_account_info == mock_service_account_instance
     mock_logger.info.assert_called_once_with(
@@ -502,7 +502,7 @@ def test_service_account_info_loading_from_env(
 
 
 def test_cached_properties_are_cached(
-    connector: GoogleDriveConnector, mock_google_api_client: Mock
+    connector: GoogleDriveAPIConnector, mock_google_api_client: Mock
 ) -> None:
     """Test that cached properties are actually cached."""
     connector.client = mock_google_api_client
@@ -516,7 +516,7 @@ def test_cached_properties_are_cached(
     assert mock_google_api_client.files().get.call_count == 1
 
 
-def test_file_id_from_config(connector: GoogleDriveConnector) -> None:
+def test_file_id_from_config(connector: GoogleDriveAPIConnector) -> None:
     """Test that file_id is correctly taken from config."""
     assert connector.config.file_id == "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
 
@@ -529,10 +529,10 @@ def test_file_id_from_config(connector: GoogleDriveConnector) -> None:
         ({"key": "value"}, {"key": "value"}),
     ],
 )
-@patch("lubrikit.collection.connectors.google_drive.GoogleDriveServiceAccountInfo")
+@patch("lubrikit.collection.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo")
 def test_headers_cache_initialization(
     mock_service_account_info: Mock,
-    google_drive_config: GoogleDriveConfig,
+    google_drive_config: GoogleDriveAPIConfig,
     headers_cache_input: dict[str, str] | None,
     expected_cache: dict[str, str],
 ) -> None:
@@ -540,14 +540,14 @@ def test_headers_cache_initialization(
     mock_service_account_instance = Mock()
     mock_service_account_info.return_value = mock_service_account_instance
 
-    connector = GoogleDriveConnector(
+    connector = GoogleDriveAPIConnector(
         config=google_drive_config, headers_cache=headers_cache_input
     )
     assert connector.headers_cache == expected_cache
 
 
 def test_download_cache_comparison_logic(
-    connector: GoogleDriveConnector, mock_google_api_client: Mock
+    connector: GoogleDriveAPIConnector, mock_google_api_client: Mock
 ) -> None:
     """Test the specific cache comparison logic in _download method."""
     # Test case 1: Different last_modified should trigger download
@@ -563,9 +563,9 @@ def test_download_cache_comparison_logic(
             return_value={"last_modified": "new-date", "content_length": "1024"},
         ):
             with patch(
-                "lubrikit.collection.connectors.google_drive.MediaIoBaseDownload"
+                "lubrikit.collection.connectors.google_drive_api.MediaIoBaseDownload"
             ):
-                with patch("lubrikit.collection.connectors.google_drive.io.BytesIO"):
+                with patch("lubrikit.collection.connectors.google_drive_api.io.BytesIO"):
                     _, (stream, downloader) = connector._download()
 
     # Should trigger download
@@ -585,9 +585,9 @@ def test_download_cache_comparison_logic(
             return_value={"last_modified": "same-date", "content_length": "1024"},
         ):
             with patch(
-                "lubrikit.collection.connectors.google_drive.MediaIoBaseDownload"
+                "lubrikit.collection.connectors.google_drive_api.MediaIoBaseDownload"
             ):
-                with patch("lubrikit.collection.connectors.google_drive.io.BytesIO"):
+                with patch("lubrikit.collection.connectors.google_drive_api.io.BytesIO"):
                     _, (stream, downloader) = connector._download()
 
     # Should trigger download
