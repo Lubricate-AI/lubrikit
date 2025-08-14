@@ -4,8 +4,8 @@ from typing import Any
 import requests
 from requests import Response
 
-from lubrikit.collection.connectors.base import BaseConnector
-from lubrikit.collection.connectors.configs import HTTPConfig
+from lubrikit.extract.connectors.base import BaseConnector
+from lubrikit.extract.connectors.configs import HTTPConfig
 from lubrikit.utils.retry import RetryConfig
 
 logger = logging.getLogger(__name__)

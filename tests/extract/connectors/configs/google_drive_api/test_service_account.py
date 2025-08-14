@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 from pydantic import ValidationError
 
-from lubrikit.collection.connectors.configs.google_drive_api import (
+from lubrikit.extract.connectors.configs.google_drive_api import (
     GoogleDriveAPIServiceAccountInfo,
 )
 
