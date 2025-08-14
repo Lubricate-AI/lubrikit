@@ -12,19 +12,20 @@ logger = logging.getLogger(__name__)
 
 
 class HTTPConnector(BaseConnector):
-    """HTTP connector for making HTTP requests with retry logic and caching.
+    """Connector for making HTTP requests with retry logic and caching.
 
-    This connector provides a robust interface for making HTTP requests (GET/POST)
-    with built-in retry mechanisms, response caching, and error handling. It supports
-    various data formats including form data, JSON, and query parameters.
+    This connector provides a robust interface for making HTTP requests
+    (GET/POST) with built-in retry mechanisms, response caching, and
+    error handling. It supports various data formats including form
+    data, JSON, and query parameters.
 
-    Instance Attributes:
-        config (HTTPConfig): Configuration object containing HTTP request parameters
-            including method, URL, headers, and data.
-
-        retriable_exceptions (tuple[type[Exception], ...]): Tuple of exception types
-            that should trigger retry logic. Includes connection errors, timeouts,
-            HTTP errors, and general request exceptions.
+    Attributes:
+        config (HTTPConfig): Configuration object containing HTTP
+            request parameters including method, URL, headers, and data.
+        retriable_exceptions (tuple[type[Exception], ...]): Tuple of
+            exception types that should trigger retry logic. Includes
+            connection errors, timeouts, HTTP errors, and general
+            request exceptions.
     """
 
     def __init__(
@@ -33,16 +34,6 @@ class HTTPConnector(BaseConnector):
         config: HTTPConfig,
         retry_config: RetryConfig | None = None,
     ) -> None:
-        """Initialize HTTPConnector with retry configuration.
-
-        Args:
-            headers_cache (dict[str, str]): Cached headers from previous requests
-                used for conditional requests and caching logic.
-            config (HTTPConfig): Configuration object containing HTTP request
-                parameters including method, URL, headers, and data.
-            retry_config (RetryConfig | None): Optional configuration for retry
-                behavior including max retries, delays, and backoff strategy.
-        """
         super().__init__(headers_cache, retry_config)
 
         # Configuration object containing HTTP request parameters

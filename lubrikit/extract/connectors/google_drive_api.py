@@ -28,31 +28,33 @@ class GoogleDriveAPIConnector(BaseConnector):
     Drive using service account authentication. It supports caching to
     avoid re-downloading unchanged files.
 
-    Class Attributes:
-        api_name (str): The name of the Google API service. Always "drive" for Google Drive API.
-        api_version (str): The version of the Google Drive API to use. Currently "v3".
-        scopes (list[str]): The OAuth2 scopes required for Google Drive access.
-            Contains ["https://www.googleapis.com/auth/drive"] for full Drive access.
-
-    Instance Attributes:
-        config (GoogleDriveAPIConfig): Configuration object containing the Google Drive
-            file ID and other connection parameters.
-
-        service_account_info (GoogleDriveAPIServiceAccountInfo): Service account credentials
-            for Google Cloud authentication. Loaded from environment variables if not provided.
-
-        retriable_exceptions (tuple[type[Exception], ...]): Tuple of exception types that
-            should trigger retry logic. Includes HTTP errors, authentication failures,
-            and network issues.
-
-        client (Resource | None): Google API client resource for making Drive API calls.
-            Initialized to None and set during connection establishment.
+    Attributes:
+        api_name (str): (class attribute) The name of the Google API
+            service. Always "drive" for Google Drive API.
+        api_version (str): (class attribute) The version of the Google
+            Drive API to use. Currently "v3".
+        client (Resource | None): Google API client resource for making
+            Drive API calls. Initialized to None and set during
+            connection establishment.
+        config (GoogleDriveAPIConfig): Configuration object containing
+            the Google Drive file ID and other connection parameters.
+        retriable_exceptions (tuple[type[Exception], ...]): Tuple of
+            exception types that should trigger retry logic. Includes
+            HTTP errors, authentication failures, and network issues.
+        scopes (list[str]): (class attribute) The OAuth2 scopes required
+            for Google Drive access. Contains
+            ["https://www.googleapis.com/auth/drive"] for full Drive
+            access.
+        service_account_info (GoogleDriveAPIServiceAccountInfo): Service
+            account credentials for Google Cloud authentication. Loaded
+            from environment variables if not provided.
 
     Setting Up Google Drive API Service Account
     ===========================================
 
-    To use this connector, you need to create a Google Cloud service account
-    with access to the Google Drive API. Follow these detailed steps:
+    To use this connector, you need to create a Google Cloud service
+    account with access to the Google Drive API. Follow these detailed
+    steps:
 
     Step 1: Create a Google Cloud Project
     -------------------------------------
@@ -90,7 +92,7 @@ class GoogleDriveAPIConnector(BaseConnector):
 
     Step 4: Create and Download Service Account Key
     -----------------------------------------------
-    1. In the "Credentials" page, find your newly created service account
+    1. In the "Credentials" page, find the newly created service account
     2. Click on the service account email to open its details
     3. Go to the "Keys" tab
     4. Click "Add Key" > "Create new key"
@@ -110,7 +112,7 @@ class GoogleDriveAPIConnector(BaseConnector):
     3. Click "Share"
     4. In the share dialog, enter the service account email address
     (found in the JSON file as "client_email")
-    5. Set appropriate permissions (typically "Viewer" for read-only access)
+    5. Set appropriate permissions (typically "Viewer")
     6. Click "Send"
 
     Step 6: Configure Environment Variables
@@ -180,8 +182,8 @@ class GoogleDriveAPIConnector(BaseConnector):
         read)
     4. **Regularly rotate service account keys**
     5. **Monitor service account usage** in Google Cloud Console
-    6. **Use different service accounts for different environments** (dev,
-        staging, prod)
+    6. **Use different service accounts for different environments**
+        (dev, staging, prod)
 
     Troubleshooting Common Issues
     ============================
@@ -189,7 +191,8 @@ class GoogleDriveAPIConnector(BaseConnector):
     "403 Forbidden" Error
     --------------------
     - Ensure the Google Drive API is enabled in your project
-    - Verify the service account email has been granted access to the file
+    - Verify the service account email has been granted access to the
+        file
     - Check that the file ID is correct
 
     "Authentication Error"
