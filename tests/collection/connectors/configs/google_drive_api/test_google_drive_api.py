@@ -1,13 +1,13 @@
 import pytest
 from pydantic import ValidationError
 
-from lubrikit.collection.connectors.configs.google_drive import GoogleDriveConfig
+from lubrikit.collection.connectors.configs.google_drive_api import GoogleDriveAPIConfig
 
 
 def test_valid_file_id() -> None:
-    """Test GoogleDriveConfig with valid file_id."""
+    """Test GoogleDriveAPIConfig with valid file_id."""
     file_id = "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
-    config = GoogleDriveConfig(file_id=file_id)
+    config = GoogleDriveAPIConfig(file_id=file_id)
 
     assert config.file_id == file_id
 
@@ -23,15 +23,15 @@ def test_valid_file_id() -> None:
     ],
 )
 def test_valid_file_id_formats(file_id: str) -> None:
-    """Test GoogleDriveConfig accepts various valid file ID formats."""
-    config = GoogleDriveConfig(file_id=file_id)
+    """Test GoogleDriveAPIConfig accepts various valid file ID formats."""
+    config = GoogleDriveAPIConfig(file_id=file_id)
     assert config.file_id == file_id
 
 
 def test_file_id_required() -> None:
     """Test that file_id field is required."""
     with pytest.raises(ValidationError) as exc_info:
-        GoogleDriveConfig()  # type: ignore[call-arg]
+        GoogleDriveAPIConfig()  # type: ignore[call-arg]
 
     errors = exc_info.value.errors()
     assert len(errors) == 1
@@ -42,7 +42,7 @@ def test_file_id_required() -> None:
 def test_invalid_file_id_empty_string() -> None:
     """Test that file_id field rejects empty string."""
     with pytest.raises(ValidationError) as exc_info:
-        GoogleDriveConfig(file_id="")
+        GoogleDriveAPIConfig(file_id="")
 
     errors = exc_info.value.errors()
     assert len(errors) == 1
@@ -64,14 +64,14 @@ def test_invalid_file_id_empty_string() -> None:
 def test_whitespace_file_id_allowed(whitespace_file_id: str) -> None:
     """Test file_id field allows whitespace-only strings (Pydantic behavior)."""
     # Note: Pydantic's min_length counts whitespace characters, so these are valid
-    config = GoogleDriveConfig(file_id=whitespace_file_id)
+    config = GoogleDriveAPIConfig(file_id=whitespace_file_id)
     assert config.file_id == whitespace_file_id
 
 
 def test_file_id_type_validation() -> None:
     """Test that file_id field rejects non-string types."""
     with pytest.raises(ValidationError) as exc_info:
-        GoogleDriveConfig(file_id=123)
+        GoogleDriveAPIConfig(file_id=123)
 
     errors = exc_info.value.errors()
     assert len(errors) == 1

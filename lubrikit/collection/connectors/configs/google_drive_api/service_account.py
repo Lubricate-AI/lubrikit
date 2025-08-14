@@ -1,8 +1,8 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class GoogleDriveServiceAccountInfo(BaseSettings):
-    """Pydantic model for Google Drive Service Account Info.
+class GoogleDriveAPIServiceAccountInfo(BaseSettings):
+    """Pydantic model for Google Drive API Service Account Info.
 
     The class properties are dynamically extracted from the environment
     variables prefixed with "GOOGLE_".

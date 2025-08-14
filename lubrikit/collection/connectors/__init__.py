@@ -1,4 +1,4 @@
-from .google_drive import GoogleDriveConnector
+from .google_drive_api import GoogleDriveAPIConnector
 from .http_connector import HTTPConnector
 
-__all__ = ["HTTPConnector", "GoogleDriveConnector"]
+__all__ = ["HTTPConnector", "GoogleDriveAPIConnector"]

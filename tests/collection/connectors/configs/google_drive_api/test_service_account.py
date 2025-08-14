@@ -4,8 +4,8 @@ from unittest.mock import patch
 import pytest
 from pydantic import ValidationError
 
-from lubrikit.collection.connectors.configs.google_drive import (
-    GoogleDriveServiceAccountInfo,
+from lubrikit.collection.connectors.configs.google_drive_api import (
+    GoogleDriveAPIServiceAccountInfo,
 )
 
 
@@ -54,7 +54,7 @@ def test_initialization_with_environment_variables(
 ) -> None:
     """Test initialization from environment variables."""
     with patch.dict(os.environ, valid_service_account_env, clear=False):
-        service_account = GoogleDriveServiceAccountInfo()
+        service_account = GoogleDriveAPIServiceAccountInfo()
 
         assert getattr(service_account, field_name) == expected
 
@@ -88,7 +88,7 @@ def test_initialization_with_explicit_values(field_name: str, value: str) -> Non
     # Override the specific field being tested
     base_data[field_name] = value
 
-    service_account = GoogleDriveServiceAccountInfo(**base_data)  # type: ignore[arg-type]
+    service_account = GoogleDriveAPIServiceAccountInfo(**base_data)  # type: ignore[arg-type]
 
     assert getattr(service_account, field_name) == value
 
@@ -102,7 +102,7 @@ def test_missing_required_environment_variables() -> None:
 
     with patch.dict(os.environ, env_without_google, clear=True):
         with pytest.raises(ValidationError) as exc_info:
-            GoogleDriveServiceAccountInfo()
+            GoogleDriveAPIServiceAccountInfo()
 
         errors = exc_info.value.errors()
         # Should have multiple validation errors for missing fields
@@ -151,7 +151,7 @@ def test_individual_missing_fields(
 
     with patch.dict(os.environ, env_vars, clear=True):
         with pytest.raises(ValidationError) as exc_info:
-            GoogleDriveServiceAccountInfo()
+            GoogleDriveAPIServiceAccountInfo()
 
         errors = exc_info.value.errors()
         error_fields = {error["loc"][0] for error in errors}
@@ -180,7 +180,7 @@ def test_environment_prefix() -> None:
     }
 
     with patch.dict(os.environ, full_env, clear=True):
-        service_account = GoogleDriveServiceAccountInfo()
+        service_account = GoogleDriveAPIServiceAccountInfo()
 
         assert service_account.type == "service_account"
         assert service_account.project_id == "prefix-test"
@@ -189,4 +189,4 @@ def test_environment_prefix() -> None:
 def test_settings_config_dict() -> None:
     """Test that the settings configuration is properly set."""
     # This tests the model_config class attribute
-    assert GoogleDriveServiceAccountInfo.model_config["env_prefix"] == "GOOGLE_"
+    assert GoogleDriveAPIServiceAccountInfo.model_config["env_prefix"] == "GOOGLE_"
