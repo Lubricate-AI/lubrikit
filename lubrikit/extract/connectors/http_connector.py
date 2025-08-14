@@ -15,7 +15,7 @@ class HTTPConnector(BaseConnector):
     """Connector for making HTTP requests with retry logic and caching.
 
     This connector provides a robust interface for making HTTP requests
-    (GET/POST) with built-in retry mechanisms, response caching, and 
+    (GET/POST) with built-in retry mechanisms, response caching, and
     error handling. It supports various data formats including form
     data, JSON, and query parameters.
 
