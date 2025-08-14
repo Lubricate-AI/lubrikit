@@ -12,6 +12,21 @@ logger = logging.getLogger(__name__)
 
 
 class HTTPConnector(BaseConnector):
+    """HTTP connector for making HTTP requests with retry logic and caching.
+    
+    This connector provides a robust interface for making HTTP requests (GET/POST)
+    with built-in retry mechanisms, response caching, and error handling. It supports
+    various data formats including form data, JSON, and query parameters.
+    
+    Instance Attributes:
+        config (HTTPConfig): Configuration object containing HTTP request parameters
+            including method, URL, headers, and data.
+            
+        retriable_exceptions (tuple[type[Exception], ...]): Tuple of exception types
+            that should trigger retry logic. Includes connection errors, timeouts,
+            HTTP errors, and general request exceptions.
+    """
+    
     def __init__(
         self,
         headers_cache: dict[str, str],
@@ -21,18 +36,24 @@ class HTTPConnector(BaseConnector):
         """Initialize HTTPConnector with retry configuration.
 
         Args:
-            headers_cache: Cached headers to use for requests
-            config: Configuration for the HTTP connector
-            retry_config: Optional configuration for HTTP requests and retries
+            headers_cache (dict[str, str]): Cached headers from previous requests
+                used for conditional requests and caching logic.
+            config (HTTPConfig): Configuration object containing HTTP request
+                parameters including method, URL, headers, and data.
+            retry_config (RetryConfig | None): Optional configuration for retry
+                behavior including max retries, delays, and backoff strategy.
         """
         super().__init__(headers_cache, retry_config)
 
+        # Configuration object containing HTTP request parameters
         self.config = config
+        
+        # Tuple of exception types that should trigger retry logic
         self.retriable_exceptions = (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.Timeout,
-            requests.exceptions.HTTPError,
-            requests.exceptions.RequestException,
+            requests.exceptions.ConnectionError,  # Network connection failures
+            requests.exceptions.Timeout,  # Request timeout errors
+            requests.exceptions.HTTPError,  # HTTP 4xx/5xx status code errors
+            requests.exceptions.RequestException,  # Base requests library exceptions
         )
 
     def _prepare_cache(self, response: Response) -> dict[str, str]:

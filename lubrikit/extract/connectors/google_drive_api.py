@@ -27,6 +27,26 @@ class GoogleDriveAPIConnector(BaseConnector):
     engineers to programmatically access and download files from Google
     Drive using service account authentication. It supports caching to
     avoid re-downloading unchanged files.
+    
+    Class Attributes:
+        api_name (str): The name of the Google API service. Always "drive" for Google Drive API.
+        api_version (str): The version of the Google Drive API to use. Currently "v3".
+        scopes (list[str]): The OAuth2 scopes required for Google Drive access.
+            Contains ["https://www.googleapis.com/auth/drive"] for full Drive access.
+    
+    Instance Attributes:
+        config (GoogleDriveAPIConfig): Configuration object containing the Google Drive
+            file ID and other connection parameters.
+            
+        service_account_info (GoogleDriveAPIServiceAccountInfo): Service account credentials
+            for Google Cloud authentication. Loaded from environment variables if not provided.
+            
+        retriable_exceptions (tuple[type[Exception], ...]): Tuple of exception types that
+            should trigger retry logic. Includes HTTP errors, authentication failures,
+            and network issues.
+            
+        client (Resource | None): Google API client resource for making Drive API calls.
+            Initialized to None and set during connection establishment.
 
     Setting Up Google Drive API Service Account
     ===========================================
@@ -230,9 +250,9 @@ class GoogleDriveAPIConnector(BaseConnector):
         GoogleDriveAPIServiceAccountInfo.
     """
 
-    api_name: str = "drive"
-    api_version: str = "v3"
-    scopes = ["https://www.googleapis.com/auth/drive"]
+    api_name: str = "drive"  # Google API service name for Drive API
+    api_version: str = "v3"  # Google Drive API version
+    scopes = ["https://www.googleapis.com/auth/drive"]  # OAuth2 scopes for full Drive access
 
     def __init__(
         self,
@@ -243,8 +263,10 @@ class GoogleDriveAPIConnector(BaseConnector):
     ):
         super().__init__(headers_cache, retry_config)
 
+        # Configuration object containing file ID and connection parameters
         self.config = config
 
+        # Service account credentials for Google Cloud authentication
         self.service_account_info: GoogleDriveAPIServiceAccountInfo
         if service_account_info:
             self.service_account_info = service_account_info
@@ -254,6 +276,7 @@ class GoogleDriveAPIConnector(BaseConnector):
             )
             self.service_account_info = GoogleDriveAPIServiceAccountInfo()
 
+        # Tuple of exception types that should trigger retry logic
         self.retriable_exceptions = (
             HttpError,  # HTTP errors from Google API (rate limits, server errors)
             RefreshError,  # Authentication token refresh failures
@@ -263,7 +286,7 @@ class GoogleDriveAPIConnector(BaseConnector):
             TimeoutError,  # Request timeout errors
         )
 
-        # initialize client
+        # Google API client resource for making Drive API calls
         self.client: Resource | None = None
 
     @cached_property
