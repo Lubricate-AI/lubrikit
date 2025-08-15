@@ -385,7 +385,6 @@ class GoogleDriveAPIConnector(BaseConnector):
         """
         if not self.client:
             raise ValueError("Google Drive client is not initialized.")
-
         about_info = (
             self.client.files()  # type: ignore[attr-defined]
             .get(fileId=self.config.fileId, fields="exportLinks")
