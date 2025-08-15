@@ -37,10 +37,19 @@ class GoogleDriveAPIConnector(BaseConnector):
             Drive API calls. Initialized to None and set during
             connection establishment.
         config (GoogleDriveAPIConfig): Configuration object containing
-            the Google Drive file ID and other connection parameters.
+            the Google Drive file ID and other connection parameters. If
+            downloading a Google Workspace document (Google Docs,
+            Google Sheets, etc.), the `mimeType` field can be set to
+            specify the desired export format.
+        headers_cache (dict[str, str]): Cache for file metadata headers
+            like file name, last modified time, and content length. Used
+            to determine if the file has changed since the last download.
         retriable_exceptions (tuple[type[Exception], ...]): Tuple of
             exception types that should trigger retry logic. Includes
             HTTP errors, authentication failures, and network issues.
+        retry_config (RetryConfig | None): Configuration for retry
+            behavior when encountering retriable exceptions. If None,
+            default retry behavior is used.
         scopes (list[str]): (class attribute) The OAuth2 scopes required
             for Google Drive access. Contains
             ["https://www.googleapis.com/auth/drive"] for full Drive
@@ -223,28 +232,29 @@ class GoogleDriveAPIConnector(BaseConnector):
         }
 
         # Configure the file to download
-        config = GoogleDriveAPIConfig(file_id="[YOUR_FILE_ID]")
+        config = GoogleDriveAPIConfig(fileId="[YOUR_FILE_ID]")
 
         # Create connector instance
         connector = GoogleDriveAPIConnector(config=config, headers_cache=headers_cache)
 
         # Check for updates and get download info
-        headers, (stream, downloader) = connector.download()
+        headers, downloader = connector.download()
         print(headers)
 
         # Download file if there are updates
         if downloader:
+            # Download the file
             done = False
             while not done:
                 status, done = downloader.next_chunk()
-                if status:
-                    print(f"Download {int(status.progress() * 100)}%.")
 
-        # Save downloaded content to file
-        if stream:
-            with open(headers["file_name"], "wb") as f:
-                stream.seek(0)
-                f.write(stream.read())
+            # Access the downloaded data
+            file_handle = downloader._fd  # The BytesIO object
+            file_handle.seek(0)  # Reset to beginning
+
+            # Stream to final destination
+            with storage_client.open_for_write() as dest:
+                dest.write(file_handle.read())
         ```
 
     Note:
@@ -291,62 +301,9 @@ class GoogleDriveAPIConnector(BaseConnector):
             TimeoutError,  # Request timeout errors
         )
 
-        # Google API client resource for making Drive API calls
-        self.client: Resource | None = None
-
     @cached_property
-    def content_length(self) -> int:
-        """Get the content length of the file in Google Drive.
-
-        Returns:
-            int: Content length of the file.
-        """
-        if not self.client:
-            raise ValueError("Google Drive client is not initialized.")
-
-        return int(
-            self.client.files()  # type: ignore[attr-defined]
-            .get(fileId=self.config.file_id, fields="size")
-            .execute()
-            .get("size")
-        )
-
-    @cached_property
-    def file_name(self) -> str:
-        """Get the name of the file in Google Drive.
-
-        Returns:
-            str: Name of the file.
-        """
-        if not self.client:
-            raise ValueError("Google Drive client is not initialized.")
-
-        return str(
-            self.client.files()  # type: ignore[attr-defined]
-            .get(fileId=self.config.file_id, fields="name")
-            .execute()
-            .get("name")
-        )
-
-    @cached_property
-    def last_modified_at(self) -> str:
-        """When the file was updated in Google Drive.
-
-        Returns:
-            str: Datetime string for when the data source file was updated.
-        """
-        if not self.client:
-            raise ValueError("Google Drive client is not initialized.")
-
-        return str(
-            self.client.files()  # type: ignore[attr-defined]
-            .get(fileId=self.config.file_id, fields="modifiedTime")
-            .execute()
-            .get("modifiedTime", "")
-        )
-
-    def connect(self) -> Resource:
-        """Create a client that communicates to a Google API.
+    def client(self) -> Resource:
+        """A client that communicates to the Google Drive API.
 
         Returns:
             Resource: A Google API client resource.
@@ -365,47 +322,120 @@ class GoogleDriveAPIConnector(BaseConnector):
 
         return client  # type: ignore[no-any-return]
 
+    @cached_property
+    def content_length(self) -> int:
+        """Get the content length of the file in Google Drive.
+
+        Returns:
+            int: Content length of the file.
+        """
+        return int(
+            self.client.files()  # type: ignore[attr-defined]
+            .get(fileId=self.config.fileId, fields="size")
+            .execute()
+            .get("size")
+        )
+
+    @cached_property
+    def file_name(self) -> str:
+        """Get the name of the file in Google Drive.
+
+        Returns:
+            str: Name of the file.
+        """
+        return str(
+            self.client.files()  # type: ignore[attr-defined]
+            .get(fileId=self.config.fileId, fields="name")
+            .execute()
+            .get("name")
+        )
+
+    @cached_property
+    def last_modified_at(self) -> str:
+        """When the file was updated in Google Drive.
+
+        Returns:
+            str: Datetime string for when the data source file was updated.
+        """
+        return str(
+            self.client.files()  # type: ignore[attr-defined]
+            .get(fileId=self.config.fileId, fields="modifiedTime")
+            .execute()
+            .get("modifiedTime", "")
+        )
+
+    @cached_property
+    def supported_mime_types(self) -> list[str]:
+        """Get the list of supported MIME types for exporting.
+
+        Mime types are used to specify the format in which files
+        should be exported from Google Drive. This is particularly
+        useful when downloading Google Workspace documents like
+        Google Docs, Sheets, or Slides. For example, you can
+        export a Google Doc as a PDF or a Google Sheet as a CSV.
+
+        This method retrieves the supported MIME types for exporting
+        files from Google Drive by querying the `about.get` API endpoint
+        with `exportFormats`.
+
+        Returns:
+            list[str]: A list of supported MIME types for file exports.
+        """
+        about_info = (
+            self.client.files()  # type: ignore[attr-defined]
+            .get(fileId=self.config.fileId, fields="exportLinks")
+            .execute()
+        )
+        export_links = about_info.get("exportLinks", {})
+
+        # Collect all supported MIME types for the given file ID
+        supported_mime_types = list(export_links.keys())
+
+        return sorted(supported_mime_types)
+
     def _check(self) -> dict[str, Any] | None:
         """Check the Google Drive resource without downloading it.
 
         Returns:
             dict[str, Any]: A dictionary containing the updated headers cache.
         """
-        try:
-            self.client = self.connect()
-            return self._prepare_cache()
-        except Exception as e:
-            logger.error(f"Failed to connect to Google Drive API: {e}")
-            return None
+        logger.info(f"Checking {self.file_name} in Google Drive...")
 
-    def _download(
-        self,
-    ) -> tuple[
-        dict[str, Any] | None, tuple[io.BytesIO | None, MediaIoBaseDownload | None]
-    ]:
+        self._validate_mime_type()
+        return self._prepare_cache()
+
+    def _download(self) -> tuple[dict[str, Any] | None, MediaIoBaseDownload | None]:
         """Download the Google Drive file.
 
         Returns:
             tuple[dict[str, Any] | None, MediaIoBaseDownload]: A tuple
                 containing the file metadata and the download stream.
         """
-        self.client = self.connect()
+        logger.info(f"Downloading {self.file_name} from Google Drive...")
+        self._validate_mime_type()
         new_headers = self._prepare_cache()
 
         # If resource unchanged
         if all(
-            self.headers_cache.get(k) == new_headers.get(k)
-            for k in ["last_modified", "content_length"]
+            self.headers_cache.get(k) == new_headers.get(k) for k in new_headers.keys()
         ):
             logger.info("No new version. Skipping download.")
-            return new_headers, (None, None)
+            return new_headers, None
 
-        logger.info(f"Downloading file {self.config.file_id} from Google Drive...")
-        request = self.client.files().get_media(fileId=self.config.file_id)  # type: ignore[attr-defined]
-        stream = io.BytesIO()
-        downloader = MediaIoBaseDownload(stream, request)
+        # If resource changed, prepare to download
+        if self.config.mimeType is None:
+            request_func = self.client.files().get_media  # type: ignore[attr-defined]
+            request = request_func(fileId=self.config.fileId)
+        else:
+            request_func = self.client.files().export_media  # type: ignore[attr-defined]
+            request = request_func(
+                fileId=self.config.fileId, mimeType=self.config.mimeType
+            )
 
-        return new_headers, (stream, downloader)
+        fh = io.BytesIO()
+        downloader = MediaIoBaseDownload(fh, request)
+
+        return new_headers, downloader
 
     def _prepare_cache(self) -> dict[str, str]:
         """Prepare cache metadata from the Google Drive file.
@@ -420,3 +450,19 @@ class GoogleDriveAPIConnector(BaseConnector):
         }
 
         return cache
+
+    def _validate_mime_type(self) -> None:
+        """Validate the MIME type if provided in the config.
+
+        Raises:
+            ValueError: If the provided MIME type is not supported by
+                Google Drive.
+        """
+        if (
+            self.config.mimeType is not None
+            and self.config.mimeType not in self.supported_mime_types
+        ):
+            raise ValueError(
+                f"Unsupported MIME type '{self.config.mimeType}'. "
+                f"Supported types: {', '.join(self.supported_mime_types)}"
+            )

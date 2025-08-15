@@ -272,6 +272,7 @@ def test_download_failure(
 
     headers, response = connector._download()
 
+    # Failed responses should return None for both headers and response
     assert headers is None
     assert response is None
     mock_logger.error.assert_called_once_with(
