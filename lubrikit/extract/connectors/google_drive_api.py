@@ -322,9 +322,6 @@ class GoogleDriveAPIConnector(BaseConnector):
         Returns:
             int: Content length of the file.
         """
-        if not self.client:
-            raise ValueError("Google Drive client is not initialized.")
-
         return int(
             self.client.files()  # type: ignore[attr-defined]
             .get(fileId=self.config.fileId, fields="size")
@@ -339,9 +336,6 @@ class GoogleDriveAPIConnector(BaseConnector):
         Returns:
             str: Name of the file.
         """
-        if not self.client:
-            raise ValueError("Google Drive client is not initialized.")
-
         return str(
             self.client.files()  # type: ignore[attr-defined]
             .get(fileId=self.config.fileId, fields="name")
@@ -356,9 +350,6 @@ class GoogleDriveAPIConnector(BaseConnector):
         Returns:
             str: Datetime string for when the data source file was updated.
         """
-        if not self.client:
-            raise ValueError("Google Drive client is not initialized.")
-
         return str(
             self.client.files()  # type: ignore[attr-defined]
             .get(fileId=self.config.fileId, fields="modifiedTime")
@@ -383,8 +374,6 @@ class GoogleDriveAPIConnector(BaseConnector):
         Returns:
             list[str]: A list of supported MIME types for file exports.
         """
-        if not self.client:
-            raise ValueError("Google Drive client is not initialized.")
         about_info = (
             self.client.files()  # type: ignore[attr-defined]
             .get(fileId=self.config.fileId, fields="exportLinks")
