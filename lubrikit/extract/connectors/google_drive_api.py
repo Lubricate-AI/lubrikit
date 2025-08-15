@@ -416,12 +416,15 @@ class GoogleDriveAPIConnector(BaseConnector):
             return new_headers, None
 
         # If resource changed, prepare to download
-        request_func = (
-            self.client.files().get_media  # type: ignore[attr-defined]
-            if self.config.mimeType is None
-            else self.client.files().export_media  # type: ignore[attr-defined]
-        )
-        request = request_func(**self.config.model_dump(exclude_none=True))
+        if self.config.mimeType is None:
+            request_func = self.client.files().get_media
+            request = request_func(fileId=self.config.fileId)
+        else:
+            request_func = self.client.files().export_media
+            request = request_func(
+                fileId=self.config.fileId, mimeType=self.config.mimeType
+            )
+
         fh = io.FileIO(self.file_name, mode="wb")
         downloader = MediaIoBaseDownload(fh, request)
 
