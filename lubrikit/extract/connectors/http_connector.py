@@ -22,10 +22,16 @@ class HTTPConnector(BaseConnector):
     Attributes:
         config (HTTPConfig): Configuration object containing HTTP
             request parameters including method, URL, headers, and data.
+        headers_cache (dict[str, str]): Cache for HTTP headers to be
+            included in requests. This can include authentication tokens,
+            content types, and other custom headers.
         retriable_exceptions (tuple[type[Exception], ...]): Tuple of
             exception types that should trigger retry logic. Includes
             connection errors, timeouts, HTTP errors, and general
             request exceptions.
+        retry_config (RetryConfig | None): Configuration for retry
+            behavior when encountering retriable exceptions. If None,
+            default retry behavior is used.
     """
 
     def __init__(
@@ -100,8 +106,7 @@ class HTTPConnector(BaseConnector):
                 containing the updated headers cache and the response
                 object if the request was successful, otherwise None.
         """
-        previous_headers = self.headers_cache
-        logger.info(f"{self.config.method} {self.config.url}...")
+        logger.info(f"Downloading {self.config.method} {self.config.url}...")
 
         # Send request
         r = requests.request(
@@ -115,10 +120,14 @@ class HTTPConnector(BaseConnector):
         )
         new_headers = self._prepare_cache(r)
 
-        # If resource unchanged
+        # Check for failure first
+        if not r.ok:
+            logger.error(f"Request failed: {r.status_code} {r.reason}")
+            return None, None
+
+        # If resource unchanged (only for successful responses)
         if r.status_code == 304 or all(
-            previous_headers.get(k) == new_headers.get(k)
-            for k in ["last_modified", "content_length"]
+            self.headers_cache.get(k) == new_headers.get(k) for k in new_headers.keys()
         ):
             logger.info(
                 f"Response: {r.status_code} {r.reason}. "
@@ -126,9 +135,6 @@ class HTTPConnector(BaseConnector):
             )
             return new_headers, None
 
-        if r.ok:
-            logger.info(f"Response: {r.status_code} {r.reason}")
-            return new_headers, r
-        else:
-            logger.error(f"Request failed: {r.status_code} {r.reason}")
-            return None, None
+        # Successful response with new content
+        logger.info(f"Response: {r.status_code} {r.reason}")
+        return new_headers, r
