@@ -243,11 +243,18 @@ class GoogleDriveAPIConnector(BaseConnector):
 
         # Download file if there are updates
         if downloader:
+            # Download the file
             done = False
             while not done:
                 status, done = downloader.next_chunk()
-                if status:
-                    print(f"Download {int(status.progress() * 100)}%.")
+
+            # Access the downloaded data
+            file_handle = downloader._fd  # The BytesIO object
+            file_handle.seek(0)  # Reset to beginning
+
+            # Stream to final destination
+            with storage_client.open_for_write() as dest:
+                dest.write(file_handle.read())
         ```
 
     Note:
@@ -417,15 +424,15 @@ class GoogleDriveAPIConnector(BaseConnector):
 
         # If resource changed, prepare to download
         if self.config.mimeType is None:
-            request_func = self.client.files().get_media
+            request_func = self.client.files().get_media  # type: ignore[attr-defined]
             request = request_func(fileId=self.config.fileId)
         else:
-            request_func = self.client.files().export_media
+            request_func = self.client.files().export_media  # type: ignore[attr-defined]
             request = request_func(
                 fileId=self.config.fileId, mimeType=self.config.mimeType
             )
 
-        fh = io.FileIO(self.file_name, mode="wb")
+        fh = io.BytesIO()
         downloader = MediaIoBaseDownload(fh, request)
 
         return new_headers, downloader
