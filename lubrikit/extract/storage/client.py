@@ -25,7 +25,7 @@ class ExtractStorageClient(StorageClient):
         Returns:
             str: The folder path in storage.
         """
-        folder = Layer.LANDING.bucket
+        folder = os.environ.get("AWS_LANDING_BUCKET", Layer.LANDING.bucket)
 
         return os.path.join(self.base_path, folder)
 
