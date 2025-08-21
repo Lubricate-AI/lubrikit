@@ -264,17 +264,18 @@ class GoogleDriveAPIConnector(BaseConnector):
 
     api_name: str = "drive"  # Google API service name for Drive API
     api_version: str = "v3"  # Google Drive API version
-    scopes = [
-        "https://www.googleapis.com/auth/drive"
-    ]  # OAuth2 scopes for full Drive access
+    scopes = ["https://www.googleapis.com/auth/drive"]  # OAuth2 scopes for Drive access
 
     def __init__(
         self,
-        config: dict[str, Any],
-        service_account_info: GoogleDriveAPIServiceAccountInfo | None = None,
         headers_cache: dict[str, str] | None = None,
         retry_config: dict[str, Any] | None = None,
+        config: dict[str, Any] | None = None,
+        service_account_info: GoogleDriveAPIServiceAccountInfo | None = None,
     ):
+        if not config:
+            raise ValueError("GoogleDriveAPIConnector requires a configuration.")
+
         super().__init__(headers_cache, retry_config)
 
         # Configuration object containing file ID and connection parameters
