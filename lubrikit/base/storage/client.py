@@ -1,4 +1,5 @@
 import logging
+from abc import ABC, abstractmethod
 from functools import cached_property, singledispatchmethod
 from typing import Any
 
@@ -7,7 +8,7 @@ import s3fs  # type: ignore
 logger = logging.getLogger(__name__)
 
 
-class StorageClient:
+class StorageClient(ABC):
     chunk_size: int = 1024
     encoding: str = "utf-8"
 
@@ -32,6 +33,28 @@ class StorageClient:
     def _make_dirs(self, path: str) -> None:
         if not self.s3.exists(path):
             self.s3.mkdir(path)
+
+    @abstractmethod
+    def get_folder(self, *args: Any, **kwargs: Any) -> str:
+        """Get the folder path for the given metadata.
+
+        Returns:
+            str: The folder path in storage.
+        """
+        ...
+
+    @abstractmethod
+    def get_path(self, metadata: Any) -> str:
+        """Get the full path for the given metadata.
+
+        Args:
+            metadata (Any): Metadata object containing information about
+                the file.
+
+        Returns:
+            str: The full path to the file in storage.
+        """
+        ...
 
     @singledispatchmethod
     def write(self, data: Any) -> None:

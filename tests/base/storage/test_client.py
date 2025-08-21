@@ -7,11 +7,6 @@ import pytest
 from lubrikit.base.storage import StorageClient
 
 
-def test_base_path() -> None:
-    client = StorageClient()
-    assert client.base_path == "s3://"
-
-
 @pytest.fixture
 def MockStorageClient() -> type:
     class MockStorageClient(StorageClient):
@@ -21,7 +16,18 @@ def MockStorageClient() -> type:
             s3.exists.return_value = False
             return s3
 
+        def get_folder(self) -> str:
+            return "test_folder"
+
+        def get_path(self, *args: Any, **kwargs: Any) -> str:
+            return "test_folder/test_path"
+
     return MockStorageClient
+
+
+def test_base_path(MockStorageClient: type) -> None:
+    client = MockStorageClient()
+    assert client.base_path == "s3://"
 
 
 def test_make_dirs(MockStorageClient: type) -> None:
