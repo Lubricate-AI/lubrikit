@@ -8,10 +8,12 @@ class BaseConnector(ABC):
     def __init__(
         self,
         headers_cache: dict[str, str] | None = None,
-        retry_config: RetryConfig | None = None,
+        retry_config: dict[str, Any] | None = None,
     ) -> None:
         self.headers_cache: dict[str, str] = headers_cache or {}
-        self.retry_config = retry_config or RetryConfig()
+        self.retry_config = (
+            RetryConfig(**retry_config) if retry_config else RetryConfig()
+        )
 
         if TYPE_CHECKING:
             self.retriable_exceptions: tuple[type[Exception], ...] = ()

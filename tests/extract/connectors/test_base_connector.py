@@ -13,7 +13,7 @@ class ConcreteConnector(BaseConnector):
     def __init__(
         self,
         headers_cache: dict[str, str] | None = None,
-        retry_config: RetryConfig | None = None,
+        retry_config: dict[str, int | float] | None = None,
         retriable_exceptions: tuple[type[Exception], ...] = (),
     ) -> None:
         super().__init__(headers_cache, retry_config)
@@ -43,18 +43,6 @@ def headers_cache() -> dict[str, str]:
 
 
 @pytest.fixture
-def retry_config() -> RetryConfig:
-    """Sample retry configuration."""
-    return RetryConfig(
-        timeout=5.0,
-        max_retries=2,
-        base_delay=0.5,
-        max_delay=30.0,
-        backoff_factor=2.0,
-    )
-
-
-@pytest.fixture
 def connector(headers_cache: dict[str, str]) -> ConcreteConnector:
     """BaseConnector concrete implementation for testing."""
     return ConcreteConnector(headers_cache)
@@ -62,7 +50,7 @@ def connector(headers_cache: dict[str, str]) -> ConcreteConnector:
 
 @pytest.fixture
 def connector_with_retry(
-    headers_cache: dict[str, str], retry_config: RetryConfig
+    headers_cache: dict[str, str], retry_config: dict[str, int | float]
 ) -> ConcreteConnector:
     """BaseConnector with custom retry configuration."""
     return ConcreteConnector(headers_cache, retry_config)
@@ -89,13 +77,13 @@ def test_initialization_default(
 
 
 def test_initialization_with_retry_config(
-    headers_cache: dict[str, str], retry_config: RetryConfig
+    headers_cache: dict[str, str], retry_config: dict[str, int | float]
 ) -> None:
     """Test BaseConnector initialization with custom retry config."""
     connector = ConcreteConnector(headers_cache, retry_config)
 
     assert connector.headers_cache == headers_cache
-    assert connector.retry_config == retry_config
+    assert connector.retry_config == RetryConfig(**retry_config)
 
 
 def test_initialization_empty_headers_cache() -> None:

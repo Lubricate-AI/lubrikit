@@ -6,7 +6,6 @@ from requests import Response
 
 from lubrikit.extract.connectors.base import BaseConnector
 from lubrikit.extract.connectors.configs import HTTPConfig
-from lubrikit.utils.retry import RetryConfig
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +19,7 @@ class HTTPConnector(BaseConnector):
     data, JSON, and query parameters.
 
     Attributes:
-        config (HTTPConfig): Configuration object containing HTTP
+        config (dict[str, Any]): Configuration object containing HTTP
             request parameters including method, URL, headers, and data.
         headers_cache (dict[str, str]): Cache for HTTP headers to be
             included in requests. This can include authentication tokens,
@@ -29,7 +28,7 @@ class HTTPConnector(BaseConnector):
             exception types that should trigger retry logic. Includes
             connection errors, timeouts, HTTP errors, and general
             request exceptions.
-        retry_config (RetryConfig | None): Configuration for retry
+        retry_config (dict[str, Any] | None): Configuration for retry
             behavior when encountering retriable exceptions. If None,
             default retry behavior is used.
     """
@@ -37,13 +36,13 @@ class HTTPConnector(BaseConnector):
     def __init__(
         self,
         headers_cache: dict[str, str],
-        config: HTTPConfig,
-        retry_config: RetryConfig | None = None,
+        config: dict[str, Any],
+        retry_config: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(headers_cache, retry_config)
 
         # Configuration object containing HTTP request parameters
-        self.config = config
+        self.config = HTTPConfig(**config)
 
         # Tuple of exception types that should trigger retry logic
         self.retriable_exceptions = (

@@ -15,7 +15,6 @@ from lubrikit.extract.connectors.configs import (
     GoogleDriveAPIConfig,
     GoogleDriveAPIServiceAccountInfo,
 )
-from lubrikit.utils.retry import RetryConfig
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +35,8 @@ class GoogleDriveAPIConnector(BaseConnector):
         client (Resource | None): Google API client resource for making
             Drive API calls. Initialized to None and set during
             connection establishment.
-        config (GoogleDriveAPIConfig): Configuration object containing
-            the Google Drive file ID and other connection parameters. If
+        config (dict[str, Any]): Configuration object containing the
+            Google Drive file ID and other connection parameters. If
             downloading a Google Workspace document (Google Docs,
             Google Sheets, etc.), the `mimeType` field can be set to
             specify the desired export format.
@@ -271,15 +270,15 @@ class GoogleDriveAPIConnector(BaseConnector):
 
     def __init__(
         self,
-        config: GoogleDriveAPIConfig,
+        config: dict[str, Any],
         service_account_info: GoogleDriveAPIServiceAccountInfo | None = None,
         headers_cache: dict[str, str] | None = None,
-        retry_config: RetryConfig | None = None,
+        retry_config: dict[str, Any] | None = None,
     ):
         super().__init__(headers_cache, retry_config)
 
         # Configuration object containing file ID and connection parameters
-        self.config = config
+        self.config = GoogleDriveAPIConfig(**config)
 
         # Service account credentials for Google Cloud authentication
         self.service_account_info: GoogleDriveAPIServiceAccountInfo

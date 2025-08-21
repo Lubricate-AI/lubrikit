@@ -25,9 +25,9 @@ def headers_cache() -> dict[str, str]:
 
 
 @pytest.fixture
-def google_drive_config() -> GoogleDriveAPIConfig:
+def google_drive_config() -> dict[str, Any]:
     """Sample GoogleDrive configuration."""
-    return GoogleDriveAPIConfig(fileId="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms")
+    return {"fileId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"}
 
 
 @pytest.fixture
@@ -49,20 +49,8 @@ def service_account_info() -> GoogleDriveAPIServiceAccountInfo:
 
 
 @pytest.fixture
-def retry_config() -> RetryConfig:
-    """Sample retry configuration."""
-    return RetryConfig(
-        timeout=5.0,
-        max_retries=2,
-        base_delay=0.5,
-        max_delay=30.0,
-        backoff_factor=2.0,
-    )
-
-
-@pytest.fixture
 def connector(
-    google_drive_config: GoogleDriveAPIConfig,
+    google_drive_config: dict[str, Any],
     headers_cache: dict[str, str],
     service_account_info: GoogleDriveAPIServiceAccountInfo,
 ) -> GoogleDriveAPIConnector:
@@ -76,7 +64,7 @@ def connector(
 
 @pytest.fixture
 def connector_with_service_account(
-    google_drive_config: GoogleDriveAPIConfig,
+    google_drive_config: dict[str, Any],
     service_account_info: GoogleDriveAPIServiceAccountInfo,
     headers_cache: dict[str, str],
 ) -> GoogleDriveAPIConnector:
@@ -90,9 +78,9 @@ def connector_with_service_account(
 
 @pytest.fixture
 def connector_with_retry(
-    google_drive_config: GoogleDriveAPIConfig,
+    google_drive_config: dict[str, Any],
     headers_cache: dict[str, str],
-    retry_config: RetryConfig,
+    retry_config: dict[str, int | float],
     service_account_info: GoogleDriveAPIServiceAccountInfo,
 ) -> GoogleDriveAPIConnector:
     """GoogleDriveAPIConnector instance with retry configuration."""
@@ -130,7 +118,7 @@ def mock_google_api_client() -> Mock:
 @patch("lubrikit.extract.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo")
 def test_initialization_default(
     mock_service_account_info: Mock,
-    google_drive_config: GoogleDriveAPIConfig,
+    google_drive_config: dict[str, Any],
     headers_cache: dict[str, str],
 ) -> None:
     """Test GoogleDriveAPIConnector initialization with default settings."""
@@ -155,7 +143,7 @@ def test_initialization_default(
         config=google_drive_config, headers_cache=headers_cache
     )
 
-    assert connector.config == google_drive_config
+    assert connector.config == GoogleDriveAPIConfig(**google_drive_config)
     assert connector.headers_cache == headers_cache
     assert connector.service_account_info == mock_service_account_instance
     assert connector.retry_config.timeout == 10.0
@@ -165,7 +153,7 @@ def test_initialization_default(
 
 
 def test_initialization_with_service_account(
-    google_drive_config: GoogleDriveAPIConfig,
+    google_drive_config: dict[str, Any],
     service_account_info: GoogleDriveAPIServiceAccountInfo,
     headers_cache: dict[str, str],
 ) -> None:
@@ -176,7 +164,7 @@ def test_initialization_with_service_account(
         headers_cache=headers_cache,
     )
 
-    assert connector.config == google_drive_config
+    assert connector.config == GoogleDriveAPIConfig(**google_drive_config)
     assert connector.service_account_info == service_account_info
     assert connector.headers_cache == headers_cache
 
@@ -184,9 +172,9 @@ def test_initialization_with_service_account(
 @patch("lubrikit.extract.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo")
 def test_initialization_with_retry_config(
     mock_service_account_info: Mock,
-    google_drive_config: GoogleDriveAPIConfig,
+    google_drive_config: dict[str, Any],
     headers_cache: dict[str, str],
-    retry_config: RetryConfig,
+    retry_config: dict[str, int | float],
 ) -> None:
     """Test GoogleDriveAPIConnector initialization with custom retry config."""
     mock_service_account_instance = Mock()
@@ -198,13 +186,13 @@ def test_initialization_with_retry_config(
         retry_config=retry_config,
     )
 
-    assert connector.config == google_drive_config
-    assert connector.retry_config == retry_config
+    assert connector.config == GoogleDriveAPIConfig(**google_drive_config)
+    assert connector.retry_config == RetryConfig(**retry_config)
 
 
 @patch("lubrikit.extract.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo")
 def test_initialization_empty_headers_cache(
-    mock_service_account_info: Mock, google_drive_config: GoogleDriveAPIConfig
+    mock_service_account_info: Mock, google_drive_config: dict[str, Any]
 ) -> None:
     """Test GoogleDriveAPIConnector initialization with empty headers cache."""
     mock_service_account_instance = Mock()
@@ -213,7 +201,7 @@ def test_initialization_empty_headers_cache(
     connector = GoogleDriveAPIConnector(config=google_drive_config)
 
     assert connector.headers_cache == {}
-    assert connector.config == google_drive_config
+    assert connector.config == GoogleDriveAPIConfig(**google_drive_config)
 
 
 def test_retriable_exceptions_configuration(connector: GoogleDriveAPIConnector) -> None:
@@ -600,7 +588,7 @@ def test_class_attributes() -> None:
 def test_service_account_info_loading_from_env(
     mock_service_account_class: Mock,
     mock_logger: Mock,
-    google_drive_config: GoogleDriveAPIConfig,
+    google_drive_config: dict[str, Any],
 ) -> None:
     """Test that service account info is loaded from environment when not provided."""
     mock_service_account_instance = Mock()
@@ -645,7 +633,7 @@ def test_fileId_from_config(connector: GoogleDriveAPIConnector) -> None:
 @patch("lubrikit.extract.connectors.google_drive_api.GoogleDriveAPIServiceAccountInfo")
 def test_headers_cache_initialization(
     mock_service_account_info: Mock,
-    google_drive_config: GoogleDriveAPIConfig,
+    google_drive_config: dict[str, Any],
     headers_cache_input: dict[str, str] | None,
     expected_cache: dict[str, str],
 ) -> None:
@@ -838,15 +826,13 @@ def test_supported_mime_types_missing_export_links(
 def test_validate_mime_type_success(
     mock_service_account: Mock,
     mock_build: Mock,
-    google_drive_config: GoogleDriveAPIConfig,
+    google_drive_config: dict[str, Any],
     service_account_info: GoogleDriveAPIServiceAccountInfo,
     headers_cache: dict[str, str],
 ) -> None:
     """Test _validate_mime_type method with valid MIME type."""
     # Create config with a MIME type
-    config_with_mime = GoogleDriveAPIConfig(
-        fileId=google_drive_config.fileId, mimeType="text/csv"
-    )
+    config_with_mime = {"fileId": google_drive_config["fileId"], "mimeType": "text/csv"}
 
     connector = GoogleDriveAPIConnector(
         config=config_with_mime,
@@ -882,15 +868,16 @@ def test_validate_mime_type_success(
 def test_validate_mime_type_invalid(
     mock_service_account: Mock,
     mock_build: Mock,
-    google_drive_config: GoogleDriveAPIConfig,
+    google_drive_config: dict[str, Any],
     service_account_info: GoogleDriveAPIServiceAccountInfo,
     headers_cache: dict[str, str],
 ) -> None:
     """Test _validate_mime_type method with invalid MIME type."""
     # Create config with an unsupported MIME type
-    config_with_mime = GoogleDriveAPIConfig(
-        fileId=google_drive_config.fileId, mimeType="unsupported/type"
-    )
+    config_with_mime = {
+        "fileId": google_drive_config["fileId"],
+        "mimeType": "unsupported/type",
+    }
 
     connector = GoogleDriveAPIConnector(
         config=config_with_mime,
@@ -922,7 +909,7 @@ def test_validate_mime_type_invalid(
 
 
 def test_validate_mime_type_none(
-    google_drive_config: GoogleDriveAPIConfig,
+    google_drive_config: dict[str, Any],
     service_account_info: GoogleDriveAPIServiceAccountInfo,
     headers_cache: dict[str, str],
 ) -> None:
@@ -944,15 +931,16 @@ def test_validate_mime_type_none(
 def test_validate_mime_type_error_message(
     mock_service_account: Mock,
     mock_build: Mock,
-    google_drive_config: GoogleDriveAPIConfig,
+    google_drive_config: dict[str, Any],
     service_account_info: GoogleDriveAPIServiceAccountInfo,
     headers_cache: dict[str, str],
 ) -> None:
     """Test _validate_mime_type method error message includes supported types."""
     # Create config with an unsupported MIME type
-    config_with_mime = GoogleDriveAPIConfig(
-        fileId=google_drive_config.fileId, mimeType="invalid/format"
-    )
+    config_with_mime = {
+        "fileId": google_drive_config["fileId"],
+        "mimeType": "invalid/format",
+    }
 
     connector = GoogleDriveAPIConnector(
         config=config_with_mime,
