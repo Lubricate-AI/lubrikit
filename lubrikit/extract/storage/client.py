@@ -33,7 +33,7 @@ class ExtractStorageClient(StorageClient):
         """Get the path to the table.
 
         Args:
-            table_metadata (TableMetadata): The metadata of the table.
+            metadata (FileMetadata): The metadata of the file.
         Returns:
                 str: The path to the table.
         """
