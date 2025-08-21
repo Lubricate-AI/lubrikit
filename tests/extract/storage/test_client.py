@@ -3,6 +3,7 @@ from datetime import datetime
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from googleapiclient.http import MediaIoBaseDownload
 from requests import Response
 
 from lubrikit.base.storage import FileMode, Layer
@@ -381,3 +382,233 @@ def test_singledispatchmethod_registration(sample_metadata: FileMetadata) -> Non
     ):
         # This should not raise NotImplementedError
         client.write(response)
+
+
+@patch("builtins.open")
+def test_write_media_io_base_download_success(
+    mock_open: Mock,
+    sample_metadata: FileMetadata,
+    mock_s3_filesystem: Mock,
+) -> None:
+    """Test write method with MediaIoBaseDownload object - successful case."""
+    # Create mock file data
+    file_content = b"Google Drive file content data"
+    mock_file_handle = Mock()
+    mock_file_handle.read.return_value = file_content
+    mock_file_handle.seek.return_value = None
+
+    # Create a mock MediaIoBaseDownload object
+    downloader = Mock(spec=MediaIoBaseDownload)
+    downloader._fd = mock_file_handle
+
+    # Mock the download process
+    downloader.next_chunk.side_effect = [
+        (None, False),  # First chunk, not done
+        (None, False),  # Second chunk, not done
+        (None, True),  # Final chunk, done
+    ]
+
+    client = ExtractStorageClient(sample_metadata)
+
+    with (
+        patch.object(client, "get_path", return_value="s3://landing/gdrive_file.xlsx"),
+        patch.object(client, "get_folder", return_value="s3://landing"),
+        patch.object(client, "_make_dirs") as mock_make_dirs,
+    ):
+        # Mock file object
+        mock_file = Mock()
+        mock_open.return_value.__enter__.return_value = mock_file
+
+        # Execute write
+        client.write(downloader)
+
+        # Verify download process
+        assert downloader.next_chunk.call_count == 3
+
+        # Verify file handle operations
+        mock_file_handle.seek.assert_called_once_with(0)  # Reset to beginning
+        mock_file_handle.read.assert_called_once()
+
+        # Verify file operations
+        mock_make_dirs.assert_called_once_with(path="s3://landing")
+        mock_open.assert_called_once_with(
+            "s3://landing/gdrive_file.xlsx", FileMode.WRITING_BINARY
+        )
+
+        # Verify file content was written
+        mock_file.write.assert_called_once_with(file_content)
+
+
+@patch("builtins.open")
+def test_write_media_io_base_download_single_chunk(
+    mock_open: Mock,
+    sample_metadata: FileMetadata,
+    mock_s3_filesystem: Mock,
+) -> None:
+    """Test write method with MediaIoBaseDownload that completes in one chunk."""
+    file_content = b"Small file"
+    mock_file_handle = Mock()
+    mock_file_handle.read.return_value = file_content
+    mock_file_handle.seek.return_value = None
+
+    downloader = Mock(spec=MediaIoBaseDownload)
+    downloader._fd = mock_file_handle
+    downloader.next_chunk.return_value = (None, True)  # Done in one chunk
+
+    client = ExtractStorageClient(sample_metadata)
+
+    with (
+        patch.object(client, "get_path", return_value="s3://landing/small_file.txt"),
+        patch.object(client, "get_folder", return_value="s3://landing"),
+        patch.object(client, "_make_dirs"),
+    ):
+        mock_file = Mock()
+        mock_open.return_value.__enter__.return_value = mock_file
+
+        client.write(downloader)
+
+        # Should only call next_chunk once
+        downloader.next_chunk.assert_called_once()
+
+        # File should still be written
+        mock_file.write.assert_called_once_with(file_content)
+
+
+@patch("builtins.open")
+def test_write_media_io_base_download_empty_file(
+    mock_open: Mock,
+    sample_metadata: FileMetadata,
+    mock_s3_filesystem: Mock,
+) -> None:
+    """Test write method with MediaIoBaseDownload containing empty file."""
+    mock_file_handle = Mock()
+    mock_file_handle.read.return_value = b""  # Empty file
+    mock_file_handle.seek.return_value = None
+
+    downloader = Mock(spec=MediaIoBaseDownload)
+    downloader._fd = mock_file_handle
+    downloader.next_chunk.return_value = (None, True)
+
+    client = ExtractStorageClient(sample_metadata)
+
+    with (
+        patch.object(client, "get_path", return_value="s3://landing/empty_file.txt"),
+        patch.object(client, "get_folder", return_value="s3://landing"),
+        patch.object(client, "_make_dirs"),
+    ):
+        mock_file = Mock()
+        mock_open.return_value.__enter__.return_value = mock_file
+
+        client.write(downloader)
+
+        # Should still write (empty content)
+        mock_file.write.assert_called_once_with(b"")
+
+
+@patch("builtins.open")
+def test_write_media_io_base_download_with_metadata_paths(
+    mock_open: Mock,
+    metadata_with_source_and_prefix: FileMetadata,
+    mock_s3_filesystem: Mock,
+) -> None:
+    """Test write method uses correct paths from metadata with MediaIoBaseDownload."""
+    file_content = b"Google Sheets data"
+    mock_file_handle = Mock()
+    mock_file_handle.read.return_value = file_content
+    mock_file_handle.seek.return_value = None
+
+    downloader = Mock(spec=MediaIoBaseDownload)
+    downloader._fd = mock_file_handle
+    downloader.next_chunk.return_value = (None, True)
+
+    client = ExtractStorageClient(metadata_with_source_and_prefix)
+
+    # Mock the actual path construction
+    expected_folder = os.path.join(client.base_path, Layer.LANDING.bucket)
+    expected_path = f"{expected_folder}/test_source/data/files"
+
+    with (
+        patch.object(client, "get_path", return_value=expected_path),
+        patch.object(client, "get_folder", return_value=expected_folder),
+        patch.object(client, "_make_dirs") as mock_make_dirs,
+    ):
+        mock_file = Mock()
+        mock_open.return_value.__enter__.return_value = mock_file
+
+        client.write(downloader)
+
+        mock_make_dirs.assert_called_once_with(path=expected_folder)
+        mock_open.assert_called_once_with(expected_path, FileMode.WRITING_BINARY)
+
+
+def test_write_media_io_base_download_file_handle_operations(
+    sample_metadata: FileMetadata,
+) -> None:
+    """Test that MediaIoBaseDownload file handle is properly manipulated."""
+    file_content = b"Test file content for handle operations"
+    mock_file_handle = Mock()
+    mock_file_handle.read.return_value = file_content
+    mock_file_handle.seek.return_value = None
+
+    downloader = Mock(spec=MediaIoBaseDownload)
+    downloader._fd = mock_file_handle
+    downloader.next_chunk.return_value = (None, True)
+
+    client = ExtractStorageClient(sample_metadata)
+
+    with (
+        patch.object(client, "get_path", return_value="test_path"),
+        patch.object(client, "get_folder", return_value="test_folder"),
+        patch.object(client, "_make_dirs"),
+        patch("builtins.open") as mock_open,
+    ):
+        mock_file = Mock()
+        mock_open.return_value.__enter__.return_value = mock_file
+
+        client.write(downloader)
+
+        # Verify file handle was reset to beginning
+        mock_file_handle.seek.assert_called_once_with(0)
+
+        # Verify full content was read and written
+        mock_file_handle.read.assert_called_once()
+        mock_file.write.assert_called_once_with(file_content)
+
+
+def test_singledispatchmethod_supports_both_types(
+    sample_metadata: FileMetadata,
+) -> None:
+    """Test that write method supports both Response and MediaIoBaseDownload."""
+    client = ExtractStorageClient(sample_metadata)
+
+    # Test with Response
+    response = Mock(spec=Response)
+    response.headers = {"Content-Length": "0"}
+    response.raise_for_status.return_value = None
+    response.iter_content.return_value = []
+
+    with (
+        patch.object(client, "get_path", return_value="test_path"),
+        patch.object(client, "get_folder", return_value="test_folder"),
+        patch.object(client, "_make_dirs"),
+        patch("builtins.open"),
+    ):
+        # Should not raise NotImplementedError
+        client.write(response)
+
+    # Test with MediaIoBaseDownload
+    mock_file_handle = Mock()
+    mock_file_handle.read.return_value = b"test"
+    mock_file_handle.seek.return_value = None
+    downloader = Mock(spec=MediaIoBaseDownload)
+    downloader._fd = mock_file_handle
+    downloader.next_chunk.return_value = (None, True)
+
+    with (
+        patch.object(client, "get_path", return_value="test_path"),
+        patch.object(client, "get_folder", return_value="test_folder"),
+        patch.object(client, "_make_dirs"),
+        patch("builtins.open"),
+    ):
+        # Should not raise NotImplementedError
+        client.write(downloader)

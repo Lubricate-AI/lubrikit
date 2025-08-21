@@ -9,6 +9,8 @@ class BaseConnector(ABC):
         self,
         headers_cache: dict[str, str] | None = None,
         retry_config: dict[str, Any] | None = None,
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         self.headers_cache: dict[str, str] = headers_cache or {}
         self.retry_config = (

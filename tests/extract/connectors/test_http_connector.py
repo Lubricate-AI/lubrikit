@@ -35,7 +35,7 @@ def connector(
     headers_cache: dict[str, str], http_config: dict[str, Any]
 ) -> HTTPConnector:
     """HTTPConnector instance with default configuration."""
-    return HTTPConnector(headers_cache, http_config)
+    return HTTPConnector(headers_cache=headers_cache, config=http_config)
 
 
 @pytest.fixture
@@ -45,7 +45,9 @@ def connector_with_retry(
     retry_config: dict[str, int | float],
 ) -> HTTPConnector:
     """HTTPConnector instance with retry configuration."""
-    return HTTPConnector(headers_cache, http_config, retry_config)
+    return HTTPConnector(
+        headers_cache=headers_cache, config=http_config, retry_config=retry_config
+    )
 
 
 @pytest.mark.parametrize(
@@ -62,7 +64,7 @@ def test_initialization_default(
     expected: int | float,
 ) -> None:
     """Test HTTPConnector initialization with default retry config."""
-    connector = HTTPConnector(headers_cache, http_config)
+    connector = HTTPConnector(headers_cache=headers_cache, config=http_config)
 
     assert getattr(connector.retry_config, feature) == expected
 
@@ -73,7 +75,9 @@ def test_initialization_with_retry_config(
     retry_config: dict[str, int | float],
 ) -> None:
     """Test HTTPConnector initialization with custom retry config."""
-    connector = HTTPConnector(headers_cache, http_config, retry_config)
+    connector = HTTPConnector(
+        headers_cache=headers_cache, config=http_config, retry_config=retry_config
+    )
 
     assert connector.headers_cache == headers_cache
     assert connector.config == HTTPConfig(**http_config)
@@ -224,7 +228,7 @@ def test_download_unchanged_content(mock_logger: Mock, mock_request: Mock) -> No
         "method": "GET",
         "url": "https://api.example.com/data",
     }
-    connector = HTTPConnector(headers_cache, config)
+    connector = HTTPConnector(headers_cache=headers_cache, config=config)
 
     mock_response = Mock(spec=requests.Response)
     mock_response.ok = True
@@ -284,7 +288,7 @@ def test_post_request_with_form_data(mock_request: Mock) -> None:
         "data": {"username": "test", "password": "secret"},
         "extra_headers": {"Content-Type": "application/x-www-form-urlencoded"},
     }
-    connector = HTTPConnector(headers_cache, config)
+    connector = HTTPConnector(headers_cache=headers_cache, config=config)
 
     mock_response = Mock(spec=requests.Response)
     mock_response.ok = True
@@ -318,7 +322,7 @@ def test_post_request_with_json_data(mock_request: Mock) -> None:
         "json_data": {"name": "John Doe", "email": "john@example.com"},
         "extra_headers": {"Content-Type": "application/json"},
     }
-    connector = HTTPConnector(headers_cache, config)
+    connector = HTTPConnector(headers_cache=headers_cache, config=config)
 
     mock_response = Mock(spec=requests.Response)
     mock_response.ok = True
@@ -380,7 +384,7 @@ def test_headers_update_with_extra_headers(mock_request: Mock) -> None:
         "url": "https://api.example.com/data",
         "extra_headers": {"User-Agent": "TestBot/2.0", "Accept": "application/json"},
     }
-    connector = HTTPConnector(headers_cache, config)
+    connector = HTTPConnector(headers_cache=headers_cache, config=config)
 
     mock_response = Mock(spec=requests.Response)
     mock_response.ok = True
@@ -408,7 +412,7 @@ def test_empty_headers_cache_initialization() -> None:
     """Test HTTPConnector with empty headers cache."""
     headers_cache: dict[str, str] = {}
     config = {"method": "GET", "url": "https://example.com"}
-    connector = HTTPConnector(headers_cache, config)
+    connector = HTTPConnector(headers_cache=headers_cache, config=config)
 
     assert connector.headers_cache == {}
     assert connector.config == HTTPConfig(**config)
@@ -418,7 +422,7 @@ def test_no_extra_headers_config() -> None:
     """Test HTTPConnector with no extra headers in config."""
     headers_cache = {"User-Agent": "Default/1.0"}
     config = {"method": "GET", "url": "https://example.com"}
-    connector = HTTPConnector(headers_cache, config)
+    connector = HTTPConnector(headers_cache=headers_cache, config=config)
 
     assert connector.config.extra_headers is None
 
@@ -435,7 +439,7 @@ def test_http_methods(
 ) -> None:
     """Test that different HTTP methods are properly handled."""
     config = {"method": method, "url": "https://example.com"}
-    connector = HTTPConnector(headers_cache, config)
+    connector = HTTPConnector(headers_cache=headers_cache, config=config)
 
     assert connector.config.method == expected_method
 
@@ -451,6 +455,6 @@ def test_http_methods(
 def test_various_urls(url: str, headers_cache: dict[str, str]) -> None:
     """Test that various URL formats are properly handled."""
     config = {"method": "GET", "url": url}
-    connector = HTTPConnector(headers_cache, config)
+    connector = HTTPConnector(headers_cache=headers_cache, config=config)
 
     assert connector.config.url == url

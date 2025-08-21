@@ -36,9 +36,12 @@ class HTTPConnector(BaseConnector):
     def __init__(
         self,
         headers_cache: dict[str, str],
-        config: dict[str, Any],
         retry_config: dict[str, Any] | None = None,
+        config: dict[str, Any] | None = None,
     ) -> None:
+        if not config:
+            raise ValueError("HTTPConnector requires a configuration.")
+
         super().__init__(headers_cache, retry_config)
 
         # Configuration object containing HTTP request parameters

@@ -3,6 +3,7 @@ import os
 from functools import singledispatchmethod
 from typing import Any
 
+from googleapiclient.http import MediaIoBaseDownload
 from requests import Response
 
 from lubrikit.base.storage import (
@@ -50,29 +51,61 @@ class ExtractStorageClient(StorageClient):
         return "/".join(path_components)
 
     @singledispatchmethod
-    def write(self, data: Any) -> None:
+    def write(self, downloader: Any) -> None:
         """Write data to storage.
 
         Args:
-            data (Any): The data to write.
+            downloader (Any): The downloader to retrieve data to write.
         Raises:
             NotImplementedError: If the data type is not supported.
         """
-        raise NotImplementedError(f"Write not implemented for type {type(data)}")
+        raise NotImplementedError(f"Write not implemented for type {type(downloader)}")
 
     @write.register
-    def _(self, data: Response) -> None:
+    def _(self, downloader: MediaIoBaseDownload) -> None:
+        """Writes a MediaIoBaseDownload's downloaded content to storage.
+
+        The method ensures the output directory exists before writing
+        the file. The downloaded data is accessed from the internal file
+        descriptor of the downloader.
+
+        Args:
+            downloader (MediaIoBaseDownload): The downloader object used
+                to fetch the file chunks.
+        """
+        output_path: str = self.get_path(self.metadata)
+        self._make_dirs(path=self.get_folder())
+
+        # Download the file
+        done = False
+        while not done:
+            _, done = downloader.next_chunk()
+
+        # Access the downloaded data
+        file_handle = downloader._fd  # The BytesIO object
+        file_handle.seek(0)  # Reset to beginning
+
+        # Stream to final destination
+        with open(output_path, FileMode.WRITING_BINARY) as f:
+            f.write(file_handle.read())
+
+    @write.register
+    def _(self, downloader: Response) -> None:
         """Write a requests.Response object to storage.
 
         Args:
-            data (Response): The Response object to write.
+            downloader (Response): The Response object to write.
         """
-        data.raise_for_status()
+        downloader.raise_for_status()
 
         output_path: str = self.get_path(self.metadata)
         self._make_dirs(path=self.get_folder())
 
-        logger.info(f"Writing {data.headers['Content-Length']} bytes to {output_path}")
+        logger.info(
+            f"Writing {downloader.headers['Content-Length']} bytes to {output_path}"
+        )
         with open(output_path, FileMode.WRITING_BINARY) as f:
-            for chunk in data.iter_content(chunk_size=ExtractStorageClient.chunk_size):
+            for chunk in downloader.iter_content(
+                chunk_size=ExtractStorageClient.chunk_size
+            ):
                 f.write(chunk)
