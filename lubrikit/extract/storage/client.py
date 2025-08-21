@@ -94,7 +94,7 @@ class ExtractStorageClient(StorageClient):
         """Write a requests.Response object to storage.
 
         Args:
-            data (Response): The Response object to write.
+            downloader (Response): The Response object to write.
         """
         downloader.raise_for_status()
 
