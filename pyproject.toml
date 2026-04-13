@@ -24,7 +24,7 @@ dependencies = [
     "google-auth-oauthlib>=1.0.0",
     "pydantic>=2.5.0",
     "pydantic-settings>=2.0.0",
-    "requests>=2.31.0",
+    "requests>=2.33.1",
     "s3fs>=2024.6.1",
 ]
 
