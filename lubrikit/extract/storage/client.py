@@ -3,11 +3,13 @@ import os
 from functools import singledispatchmethod
 from typing import Any
 
+import polars as pl
 from googleapiclient.http import MediaIoBaseDownload
 from requests import Response
 
 from lubrikit.base.storage import (
     FileMode,
+    FileType,
     Layer,
     StorageClient,
 )
@@ -109,3 +111,20 @@ class ExtractStorageClient(StorageClient):
                 chunk_size=ExtractStorageClient.chunk_size
             ):
                 f.write(chunk)
+
+    def read_polars(self, file_name: str, file_type: FileType) -> pl.DataFrame:
+        path = "/".join([self.get_path(self.metadata), file_name])
+
+        if file_type == FileType.CSV:
+            return pl.read_csv(path, storage_options={"anon": False})
+        elif file_type == FileType.PARQUET:
+            return pl.read_parquet(path, storage_options={"anon": False})
+        elif file_type in (FileType.JSON, FileType.EXCEL, FileType.ACCESS):
+            with self.s3.open(path, "rb") as f:
+                if file_type == FileType.JSON:
+                    return pl.read_json(f)
+                return pl.read_excel(f)
+        else:
+            raise NotImplementedError(
+                f"read_polars not implemented for file type {file_type}"
+            )
