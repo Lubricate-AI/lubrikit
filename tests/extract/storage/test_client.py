@@ -2,11 +2,13 @@ import os
 from datetime import datetime
 from unittest.mock import MagicMock, Mock, patch
 
+import pandas as pd
+import polars as pl
 import pytest
 from googleapiclient.http import MediaIoBaseDownload
 from requests import Response
 
-from lubrikit.base.storage import FileMode, Layer
+from lubrikit.base.storage import FileMode, FileType, Layer
 from lubrikit.extract.storage.client import ExtractStorageClient
 from lubrikit.extract.storage.file_metadata import FileMetadata
 
@@ -612,3 +614,160 @@ def test_singledispatchmethod_supports_both_types(
     ):
         # Should not raise NotImplementedError
         client.write(downloader)
+
+
+# --- pandas read() ---
+
+
+@patch("lubrikit.extract.storage.client.pd.read_csv")
+def test_read_csv(mock_read_csv: Mock, sample_metadata: FileMetadata) -> None:
+    expected_df = pd.DataFrame({"a": [1, 2]})
+    mock_read_csv.return_value = expected_df
+
+    client = ExtractStorageClient(sample_metadata)
+
+    with patch.object(client, "get_path", return_value="s3://landing/source"):
+        result = client.read("data.csv", FileType.CSV)
+
+    mock_read_csv.assert_called_once_with(
+        "s3://landing/source/data.csv", storage_options={"anon": False}
+    )
+    assert result is expected_df
+
+
+@patch("lubrikit.extract.storage.client.pd.read_parquet")
+def test_read_parquet(mock_read_parquet: Mock, sample_metadata: FileMetadata) -> None:
+    expected_df = pd.DataFrame({"b": [3, 4]})
+    mock_read_parquet.return_value = expected_df
+
+    client = ExtractStorageClient(sample_metadata)
+
+    with patch.object(client, "get_path", return_value="s3://landing/source"):
+        result = client.read("data.parquet", FileType.PARQUET)
+
+    mock_read_parquet.assert_called_once_with(
+        "s3://landing/source/data.parquet", storage_options={"anon": False}
+    )
+    assert result is expected_df
+
+
+@patch("lubrikit.extract.storage.client.pd.read_json")
+def test_read_json(mock_read_json: Mock, sample_metadata: FileMetadata) -> None:
+    expected_df = pd.DataFrame({"c": [5, 6]})
+    mock_read_json.return_value = expected_df
+
+    client = ExtractStorageClient(sample_metadata)
+
+    with patch.object(client, "get_path", return_value="s3://landing/source"):
+        result = client.read("data.json", FileType.JSON)
+
+    mock_read_json.assert_called_once_with(
+        "s3://landing/source/data.json", storage_options={"anon": False}
+    )
+    assert result is expected_df
+
+
+@patch("lubrikit.extract.storage.client.pd.read_excel")
+def test_read_excel(mock_read_excel: Mock, sample_metadata: FileMetadata) -> None:
+    expected_df = pd.DataFrame({"d": [7, 8]})
+    mock_read_excel.return_value = expected_df
+
+    client = ExtractStorageClient(sample_metadata)
+    mock_s3 = MagicMock()
+    mock_file = MagicMock()
+    mock_s3.open.return_value.__enter__.return_value = mock_file
+
+    with (
+        patch.object(client, "get_path", return_value="s3://landing/source"),
+        patch.object(client, "s3", mock_s3),
+    ):
+        result = client.read("data.xls", FileType.EXCEL)
+
+    mock_read_excel.assert_called_once_with(mock_file)
+    assert result is expected_df
+
+
+def test_read_unsupported_type(sample_metadata: FileMetadata) -> None:
+    client = ExtractStorageClient(sample_metadata)
+
+    with pytest.raises(NotImplementedError, match="Read not implemented for file type"):
+        client.read("data.zip", FileType.ZIP)
+
+
+# --- polars read_polars() ---
+
+
+def test_read_polars_csv(sample_metadata: FileMetadata) -> None:
+    expected_df = pl.DataFrame({"a": [1, 2]})
+    client = ExtractStorageClient(sample_metadata)
+
+    with (
+        patch.object(client, "get_path", return_value="s3://landing/source"),
+        patch("lubrikit.extract.storage.client.pl.read_csv", return_value=expected_df),
+    ):
+        result = client.read_polars("data.csv", FileType.CSV)
+
+    assert result.equals(expected_df)
+
+
+def test_read_polars_parquet(sample_metadata: FileMetadata) -> None:
+    expected_df = pl.DataFrame({"b": [3, 4]})
+    client = ExtractStorageClient(sample_metadata)
+
+    with (
+        patch.object(client, "get_path", return_value="s3://landing/source"),
+        patch(
+            "lubrikit.extract.storage.client.pl.read_parquet",
+            return_value=expected_df,
+        ),
+    ):
+        result = client.read_polars("data.parquet", FileType.PARQUET)
+
+    assert result.equals(expected_df)
+
+
+def test_read_polars_json(sample_metadata: FileMetadata) -> None:
+    expected_df = pl.DataFrame({"c": [5, 6]})
+    client = ExtractStorageClient(sample_metadata)
+    mock_s3 = MagicMock()
+    mock_file = MagicMock()
+    mock_s3.open.return_value.__enter__ = MagicMock(return_value=mock_file)
+    mock_s3.open.return_value.__exit__ = MagicMock(return_value=False)
+
+    with (
+        patch.object(client, "get_path", return_value="s3://landing/source"),
+        patch.object(client, "s3", mock_s3),
+        patch(
+            "lubrikit.extract.storage.client.pl.read_json", return_value=expected_df
+        ),
+    ):
+        result = client.read_polars("data.json", FileType.JSON)
+
+    assert result.equals(expected_df)
+
+
+def test_read_polars_excel(sample_metadata: FileMetadata) -> None:
+    expected_df = pl.DataFrame({"d": [7, 8]})
+    client = ExtractStorageClient(sample_metadata)
+    mock_s3 = MagicMock()
+    mock_file = MagicMock()
+    mock_s3.open.return_value.__enter__ = MagicMock(return_value=mock_file)
+    mock_s3.open.return_value.__exit__ = MagicMock(return_value=False)
+
+    with (
+        patch.object(client, "get_path", return_value="s3://landing/source"),
+        patch.object(client, "s3", mock_s3),
+        patch(
+            "lubrikit.extract.storage.client.pl.read_excel", return_value=expected_df
+        ),
+    ):
+        result = client.read_polars("data.xls", FileType.EXCEL)
+
+    assert result.equals(expected_df)
+
+
+def test_read_polars_unsupported_type(sample_metadata: FileMetadata) -> None:
+    client = ExtractStorageClient(sample_metadata)
+
+    with pytest.raises(NotImplementedError, match="read_polars not implemented"):
+        client.read_polars("data.zip", FileType.ZIP)
