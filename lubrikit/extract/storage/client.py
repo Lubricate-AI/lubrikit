@@ -3,11 +3,13 @@ import os
 from functools import singledispatchmethod
 from typing import Any
 
+import pandas as pd
 from googleapiclient.http import MediaIoBaseDownload
 from requests import Response
 
 from lubrikit.base.storage import (
     FileMode,
+    FileType,
     Layer,
     StorageClient,
 )
@@ -109,3 +111,30 @@ class ExtractStorageClient(StorageClient):
                 chunk_size=ExtractStorageClient.chunk_size
             ):
                 f.write(chunk)
+
+    def read(self, file_name: str, file_type: FileType) -> pd.DataFrame:
+        """Read a landed file into a pandas DataFrame.
+
+        Args:
+            file_name (str): The name of the file to read.
+            file_type (FileType): The type of the file.
+
+        Returns:
+            pd.DataFrame: The file contents as a DataFrame.
+
+        Raises:
+            NotImplementedError: If the file type is not supported.
+        """
+        path = "/".join([self.get_path(self.metadata), file_name])
+
+        if file_type == FileType.CSV:
+            return pd.read_csv(path, storage_options={"anon": False})
+        elif file_type == FileType.PARQUET:
+            return pd.read_parquet(path, storage_options={"anon": False})
+        elif file_type == FileType.JSON:
+            return pd.read_json(path, storage_options={"anon": False})
+        elif file_type in (FileType.EXCEL, FileType.ACCESS):
+            with self.s3.open(path, "rb") as f:
+                return pd.read_excel(f)
+        else:
+            raise NotImplementedError(f"Read not implemented for file type {file_type}")
